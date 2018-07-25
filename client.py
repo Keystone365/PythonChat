@@ -4,10 +4,22 @@ import getpass
 import sched
 import struct
 import time
+import tkinter
 from socket import *
+
+serverName = gethostname() #if on same computer uncomment this line
+#serverName = 'cs-vus-00.principia.local' #if on remote server uncomment this line
+
 serverPort = 5006
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.settimeout(5) #set time out value
+
+CHAT_TAG =  True
+
+threadList  = ['SendThread', 'ReceiveThread']
+threadQueue = queue.Queue(10)
+sendThreads = []
+recvThreads = []
 
 userName = []
 
@@ -224,8 +236,8 @@ def ChatRoulette(command) :
     
 def Main():
     
-    #serverName = gethostname() #if on same computer uncomment this line
-    serverName = 'cs-vus-00.principia.local' #if on remote server uncomment this line
+    serverName = gethostname() #if on same computer uncomment this line
+    #serverName = 'cs-vus-00.principia.local' #if on remote server uncomment this line
 
     #try to connect to server
     try:
