@@ -1,67 +1,75 @@
-from tkinter import * 
+import tkinter as tk 
 
 
 #NOTES: The View is the module whose task is to display data to the user. Might call on model to display data
 
-class ClientView:
-    def __init__(self, root, model):
-        self.root = root
-        self.model = model
-        self.frame = Frame(self.root, width = 400, height = 300)
-        self.quitButton = Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
-        self.messages = Text(self.root)
+class ClientView(tk.Frame):
+	def __init__(self, master, controller):
+		tk.Frame.__init__(self, master, relief=tk.SUNKEN, bd=2)
+		self.master = master
+		self.controller = controller
+		self.quitButton = tk.Button(self, text = 'Quit', width = 25, command = self.controller.close_windows)
+		self.messages = tk.Text(self)
+		self.txt_reply = tk.Entry(self)
 
-        self.messages.pack()
-        self.quitButton.pack()
-        self.frame.pack()
-        
-    def close_windows(self):
-        self.root.destroy()
+		self.messages.pack(pady=10,padx=10)
+		self.txt_reply.pack()
+		self.quitButton.pack()
 
-        #<create the rest of your GUI here>
+	#<create the rest of your GUI here>
 
-class Login:
-    def __init__(self, root, model):
-        self.root = root
-        root.geometry("170x300")
-        root.resizable(False, False)
-        self.model = model
-        #self.frame = Frame(self.root)
+class Login(tk.Frame):
+	def __init__(self, master, controller):
+		tk.Frame.__init__(self, master, relief=tk.SUNKEN, bd=2)
+		self.grid(sticky="nsew")
+		self.master = master
+		self.controller = controller
+		#root.resizable(False, False)
+		#self.frame = Frame(self.root)
 
-        #Entry widgets
-        self.txt_server = Entry(self.root)
-        self.txt_port = Entry(self.root)
-        self.txt_username = Entry(self.root)
+		#Entry widgets
+		self.txt_server = tk.Entry(self)
+		self.txt_port = tk.Entry(self)
+		self.txt_username = tk.Entry(self)
 
-        #Buttons
-        self.btn_login = Button(self.root, text = 'Login', command = self.loginButton)
-        self.btn_quit = Button(self.root, text = 'Quit', command = self.close_windows)
+		#Buttons
+		self.btn_login = tk.Button(self, text = 'Login', command = self.loginButton)
+		self.btn_quit = tk.Button(self, text = 'Quit', command = self.controller.close_windows)
 
-        #set
+		#set
 
-        #Labels
-        self.lbl_Server = Label(root, text="Server")
-        self.lbl_Port = Label(root, text="Port")
-        self.lbl_Username = Label(root, text="Username")
-        
+		#Labels
+		self.lbl_Server = tk.Label(self, text="Server")
+		self.lbl_Port = tk.Label(self, text="Port")
+		self.lbl_Username = tk.Label(self, text="Username")
 
 
-        self.lbl_Server.place(x = 20, y = 30, width=120, height=25)
-        self.txt_server.place(x = 20, y = 60, width=120, height=25)
-        self.lbl_Port.place(x = 20, y = 90, width=120, height=25)
-        self.txt_port.place(x = 20, y = 120, width=120, height=25)
-        self.lbl_Username.place(x = 20, y = 150, width=120, height=25)
-        self.txt_username.place(x = 20, y = 180, width=120, height=25)
-        self.btn_login.place(x = 20, y = 210, width=120, height=25)
-        self.btn_quit.place(x = 20, y = 240, width=120, height=25)
-        
-        #self.frame.place(x = 20, y = 270, width=120, height=25)
-        
-    def close_windows(self):
-        self.root.destroy()
 
-    def loginButton(self):
-    	server = self.txt_server.get()
-    	port = self.txt_port.get()
-    	username = self.txt_username.get()
-    	self.model.loginCommand(server, port, username)
+		self.lbl_Server.grid(row=0, column=0)
+		self.txt_server.grid(row=0, column=1)
+		self.lbl_Port.grid(row=1, column=0)
+		self.txt_port.grid(row=1, column=1)
+		self.lbl_Username.grid(row=2, column=0)
+		self.txt_username.grid(row=2, column=1)
+		self.btn_login.grid(row=3, column=0, columnspan= 2, sticky="wens", padx=5, pady=5)
+		self.btn_quit.grid(row=5, column=0, columnspan= 2, sticky="wens", padx=30, pady=5)
+
+		#self.frame.place(x = 20, y = 270, width=120, height=25)
+
+	def loginButton(self):
+		server = self.txt_server.get()
+		port = self.txt_port.get()
+		username = self.txt_username.get()
+		print(server + ", " + port + ", " + username)
+		self.controller.login_handler(server, port, username)
+
+
+class LoginFrame(tk.Frame):
+
+	def __init__(self, parent, controller):
+		tk.Frame.__init__(self, parent)
+		self.controller = controller
+		label = tk.Label(self, text="This is the login page", font=controller.title_font)
+		label.pack(side="top", fill="x", pady=10)
+
+		button1 = tk.Button(self, command=lambda: controller.show_frame("Page One"))

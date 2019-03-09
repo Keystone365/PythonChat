@@ -12,6 +12,7 @@ import queue
 import os
 import threading
 import logging
+
 from socket import *
 
 #NOTES: The Model interacts with the database. Acts as interface between data and the rest of the program
@@ -36,6 +37,10 @@ class ClientModel:
 		self.port = Port
 		self.username = Username
 		print(self.server + ", " + self.port + ", " + self.username)
+
+		#sendMessage(request)
+
+
 
 	def calculate(self):
 		z = 1 + 1
