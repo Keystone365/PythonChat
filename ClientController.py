@@ -1,58 +1,84 @@
 import tkinter as tk # python 3
-from tkinter import font  as tkfont
+import util.utility as ut
+import queue
+
+from datetime import datetime
 
 from ClientModel import ClientModel
-from ClientView import ClientView, Login
+from ClientView import ClientWindow
+from reciever import Reciever
 
 #from Handlers import *
 
 #NOTE: Should handle I/O logic
 
 
-class ClientController(tk.Tk):
+class ClientController():
+
+    OUT_MESSAGE_QUEUE = queue.Queue()
+    IN_MESSAGE_QUEUE = queue.Queue()
+    model = ClientModel()
+    reciever = Reciever(IN_MESSAGE_QUEUE, OUT_MESSAGE_QUEUE)
+    
+    
 
     def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
-        self.model = ClientModel()
-        self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-
-        # the container is where we'll stack a bunch of frames
-        # on top of each other, then the one we want visible
-        # will be raised above the others
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-
-        self.frames = {}
-        for F in (ClientView, Login): #login
-            page_name = F.__name__
-            frame = F(container, self)
-            self.frames[page_name] = frame
-
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
-            frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame("Login")
+        self.cWindow = ClientWindow(self)
 
     def run(self):
-        self.title("Python Chat Application")
-        self.deiconify()
-        self.mainloop()
-
-    def close_windows(self):
-        self.destroy()
-
-    def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
-        frame = self.frames[page_name]
-        frame.tkraise()
+        self.cWindow.run()
 
     def login_handler(self, server, port, username):
-        self.show_frame("ClientView")
+        
+        #set model info
+        self.model.loginCommand(server, port, username)
+        self.cWindow.show_frame("ClientView")
+        #self.reciever.Start(server, port)
+
+        #change frame
+        self.PrintMessage()
+
         pass
+
+    def Reply_Handler(self, message):
+        self.cWindow.show_frame("ClientView")
+        frame = self.cWindow.frames["ClientView"]
+        frame.Update_Messages(message)
+        pass
+
+    def Send_Handler(self, message):
+        self.cWindow.show_frame("ClientView")
+        frame = self.cWindow.frames["ClientView"]
+        sMessage = "\n" + self.model.username + ":" + message
+        frame.Update_Messages(sMessage)
+        pass
+
+
+    #Return key press handler
+    def Return_Key_Handler(self, event):
+        frame = self.cWindow.frames["ClientView"]
+        frame.Reply_Message()
+        pass
+
+    def PrintMessage(self):
+        self.Reply_Handler('PythonChat 2019 Client running\n')
+        self.Reply_Handler('Host IP: ' + self.model.clientIP)    
+        self.Reply_Handler('\nServer IP: ' + self.model.serverIP)  
+        self.Reply_Handler('\nListening on port: ' + str(self.model.clientPort))
+        self.Reply_Handler('\nStartup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.Reply_Handler("\nEstablishing connection....\nPress CTRL-C to Quit.")
+
+    def GetServerPort(self):
+        return self.model.serverPort
+
+    def GetServerIP(self):
+        return self.model.serverIP
+
+    def close(self):
+        self.cWindow.close_windows()
+
+
+
 
 
 

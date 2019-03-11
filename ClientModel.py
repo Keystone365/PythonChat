@@ -17,26 +17,37 @@ from socket import *
 
 #NOTES: The Model interacts with the database. Acts as interface between data and the rest of the program
 
-
+#set up logger
+LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
+logging.basicConfig(filename = "util/ClientChatLog.log",
+                    level = logging.DEBUG,
+                    format = LOG_FORMAT,
+                    filemode = 'w')
+logger = logging.getLogger() #root logger
 
 class ClientModel:
 
 	def __init__(self):
-		self.server = "localhost"
-		self.port = 8192
+		self.clientIP = "localhost"
+		self.serverIP = '120.000.1.1'
+		self.clientPort = 8192
+		self.serverPort = 8192
 		self.username = "Anonymous"
-
-	def setServer(self, server):
-		self.server = server
-
-	def setPort(self, port):
-		self.port = port
+		self.BUFSIZ = 1024
+		self.CLIENT = socket(AF_INET, SOCK_STREAM)
+		self.CLIENT.settimeout(10) #set time out value
+		self.CHAT_TAG =  True
+		self.THREADS_JOIN = False # Boolean flag for ending threads
+		self.THREADS = []
+		self.CLIENT_MESSAGE_QUEUE = queue.Queue()
+		self.USERNAME = []
 
 	def loginCommand(self, Server, Port, Username):
 		self.server = Server
 		self.port = Port
 		self.username = Username
-		print(self.server + ", " + self.port + ", " + self.username)
+		print(self.server + ", " + str(self.port) + ", " + self.username)
+
 
 		#sendMessage(request)
 
@@ -51,32 +62,7 @@ class ClientModel:
 
 
 
-SERVER = gethostname() #if on same computer uncomment this line
-#SERVER = 'cs-vus-00.principia.local' #if on remote server uncomment this line
-PORT = 5006
-BUFSIZ = 1024
 
-
-#client socket setup
-CLIENT = socket(AF_INET, SOCK_STREAM)
-CLIENT.settimeout(10) #set time out value
-
-CHAT_TAG =  True
-THREADS_JOIN = False # Boolean flag for ending threads
-
-THREADS = []
-CLIENT_MESSAGE_QUEUE = queue.Queue()
-
-USERNAME = []
-
-
-#set up logger
-LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
-logging.basicConfig(filename = "util/ClientChatLog.log",
-                    level = logging.DEBUG,
-                    format = LOG_FORMAT,
-                    filemode = 'w')
-logger = logging.getLogger() #root logger
 
 
 ###################################################################
@@ -499,51 +485,13 @@ def messageHandler():
     
 def Main():
 
-    '''
-    Author: Andrew Christianson
-    August 2018
-    Description:
-    Main function for client python chat using sockets. 
-    '''
+
     
-    ut.cls()
-    print('PythonChat 2018 Client running')
-    print('Host IP: ' + gethostname())
-    print('Server IP: ' + SERVER)  
-    print('Listening on port: ' + str(PORT))
-    print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
-    print("Establishing connection....\nPress CTRL-C to Quit.")
+
     
     
     
-    clientConnect = False
-    delay=6 #<- Change to 30. For debug purposes
-    
-    #try to connect to server
-    CLIENT.settimeout(100)
-    closeAttempt= time.time() + 30
-    logger.info("Establishing connection...")
-    
-    
-    while ((not clientConnect) and (time.time() < closeAttempt)):
-        try:
-        
-            CLIENT.connect(ADDR)
-            print('Connected to server.')
-            logger.info("Connected with server...")
-            clientConnect = True
-            
-        except ConnectionRefusedError:
-            logger.info("Attempting to connect...")
-            
-        except Exception as er:
-            logger.debug('Error thrown while connecting:' + er)
-            return -1
-            
-            
-    if clientConnect == False:
-        print('Connection with server failed. Please try again at a different time.')
-        return -1
+
             
             
     

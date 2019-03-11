@@ -6,8 +6,8 @@ if __name__ == '__main__':
     ut.cls()
     try:
         port = 1893
-        Server(port)
-        Server.Run()
+        server = Server(port)
+        server.Run()
     
     #Error handling
     except Exception as ex:

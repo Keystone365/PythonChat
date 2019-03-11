@@ -1,41 +1,83 @@
 
 import queue
+import time
+from socket import *
 
-class Reciever:
+class Reciever():
 
 	THREADS = []
-	MESSAGE_QUEUE = queue.Queue()
+	
 
 	#client socket setup
 	CLIENT = socket(AF_INET, SOCK_STREAM)
 	CLIENT.settimeout(10) #set time out value
 
-	def __init__(self):
-		self.bufferSize = 1024
-		self.sendbufferSize = 1024
+	recieveBufferSize = 1024
+	sendBufferSize = 1024
 
-	def Start(self):
-			   #print("Loaded previous users")
-		sendingThread = threading.Thread(target = Chat, args = ()) # generate a thread to accept connections
+	runningStatus = True
+	clientConnect = False
+	delay=6 #<- Change to 30. For debug purposes
+
+	def __init__(self, in_queue, out_queue):
+		self.REPLY_QUEUE = in_queue
+		self.REQUEST_QUEUE = out_queue
+
+	def Start(self, server, port):
+		self.HOST = server
+		self.PORT = port
+		self.ADDR = (self.HOST, self.PORT)
+
+		#try to connect to server
+		closeAttempt= time.time() + 30
+
+		while ((not self.clientConnect) and (time.time() < closeAttempt)):
+			try:
+				print('Atemptting to Connect...')
+				self.CLIENT.connect(self.ADDR)
+				print('Connected to server.')
+				self.clientConnect = True
+
+			except ConnectionRefusedError:
+				pass
+			except Exception as er:
+				print('Error thrown while connecting:')
+				raise er
+
+		if self.clientConnect == False:
+			print('Connection with server failed. Please try again at a different time.')
+			return -1
+
+		#print("Loaded previous users")
+		sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
 		sendingThread.daemon = True
 		sendingThread.start() # start accepting connections
 		THREADS.append(sendMessageThread) # catalog the thread in the master list
 
 		#print("Accepting new connections")
-		receivingThread = threading.Thread(target = receivingMethod, args = ()) # generate a thread to send all messages
+		receivingThread = threading.Thread(target = Recieve_Thread, args = ()) # generate a thread to send all messages
 		recievingThread.daemon = True
 		recievingThread.start() # start asyncronusly sending messages
 		THREADS.append(readMessageThread) # catalog the thread in the master list
 
-	def receivingMethod(self):
+	def Recieve_Thread(self):
+
+		while(runningStatus):
+			RecieveMethod()
+			pass
+			
 
 
-	def sendingMessage(self, message):
-		MESSAGE_QUEUE.put(message)
+	def Send_Thread(self, message):
 
-	def sendingMethod(self):
+		while(runningStatus):
+			SendMethod()
+
+
+
+	def SendMethod(self):
 		
-		bMessage = MESSAGE_QUEUE[0]
+		bMessage = REQUEST_QUEUE[0]
 
 		try:
 
@@ -53,7 +95,56 @@ class Reciever:
 			CLIENT.sendall(struct.pack('>I', length))
 			CLIENT.sendall(bMessage)
         
-    except Exception as er:
-	        raise er
+		except Exception as er:
+			raise er
+
+	def RecieveMethod():
+
+		try:
+
+			# Read message length and unpack it into an integer
+			bMessageLength = recieveAll(4)
+
+			print(str(bMessageLength))
+
+			intLength = int.from_bytes(bMessageLength, byteorder= 'big')
+
+			print(str(intLength))
+			    
+			serverMessage = recieveAll(intLength).decode()
+
+			print(str(serverMessage))
+			# Read the message data
+			return serverMessage
+
+		except Exception as e:
+			raise e
+    
+
+	'''Helper function to recv a number of bytes or return None if EOF is hit'''
+	def recieveAll(length):
+
+
+		#byte sequence
+		data = b''
+
+		#Keep recieving message until end of data length
+		while (length):
+
+			#recieve data
+			packet = CLIENT.recv(length)
+
+			if not packet: return None
+			data += packet
+
+			length -= len(packet)
+
+		return data
 
 	def close(self):
+		runningStatus = False # set flag to force threads to end
+
+		for thread in THREADS:
+			thread.join()
+			THREADS.remove(thread)
+			

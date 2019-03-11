@@ -93,6 +93,9 @@ class Server():
     UserPath = 'util/users.csv'
     MessagePath = 'util/messages.csv'
 
+    def __init__(self, *args, **kwargs):
+        pass
+
 
     #sends message according to little endian unsigned int using format characters '<I'
 
@@ -623,16 +626,54 @@ class Server():
 
 
 
-    def Run():
+    def Run(self):
 
         #variables
         loginAttempts = 0
 
         print('PythonChat 2018 Server running')
         print(gethostname())  
-        print('Listening on port: ' + str(PORT))
+        print('Listening on port: ' + str(self.PORT))
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
+    def close():
+
+        logger.info('# nCTRL-C: Server shutting down')
+        logger.info('# - Disconnecting all clients')
+        
+        # notify all users and close connections
+        for client in USER_CONNECTIONS: 
+            try:
+                sendMessage(client[0], "SYSTEM: Server closed")
+            except ConnectionResetError: # client closed program
+                pass
+            finally:
+                client[0].close() # close connection
+            
+        
+        logger.info('# Clients successfully disconnected')        
+        print(" - All clients disconnected")
+
+        # set flag to force threads to end
+        THREADS_JOIN = True 
+        
+        for thread in THREADS:
+            print('Thread Ending:' + str(thread))
+            thread.join()
+            THREADS.remove(thread)
+        
+        logger.info('# All threads ended') 
+        print(" - All threads ended")
+
+        #ut.cls()
+        print('\nPythonChat Server cleanup and exit...done!')
+        SERVER.close()
+
+
+
+'''*******************************************************************************************************************************
+    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF
+*******************************************************************************************************************************'''
 
 
 
@@ -704,46 +745,6 @@ class Server():
                 text = SERVER_MESSAGE_QUEUE.get()
                 print(text) # print the message
                 SERVER_MESSAGE_QUEUE.task_done() '''
-
-    def close():
-
-        logger.info('# nCTRL-C: Server shutting down')
-        logger.info('# - Disconnecting all clients')
-        
-        # notify all users and close connections
-        for client in USER_CONNECTIONS: 
-            try:
-                sendMessage(client[0], "SYSTEM: Server closed")
-            except ConnectionResetError: # client closed program
-                pass
-            finally:
-                client[0].close() # close connection
-            
-        
-        logger.info('# Clients successfully disconnected')        
-        print(" - All clients disconnected")
-
-        # set flag to force threads to end
-        THREADS_JOIN = True 
-        
-        for thread in THREADS:
-            print('Thread Ending:' + str(thread))
-            thread.join()
-            THREADS.remove(thread)
-        
-        logger.info('# All threads ended') 
-        print(" - All threads ended")
-    
-        #ut.cls()
-        print('\nPythonChat Server cleanup and exit...done!')
-        SERVER.close()
-
-
-
-'''*******************************************************************************************************************************
-    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF
-*******************************************************************************************************************************'''
-
 
 """
 def recvMessage(client):

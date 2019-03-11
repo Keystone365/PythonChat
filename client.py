@@ -1,10 +1,37 @@
 
 from ClientController import ClientController
+from datetime import datetime
+import util.utility as ut
+
+'''
+Author: Andrew Christianson
+Febuary 2019
+Description:
+TCP TKinter Multi Client Python Chat Project. 
+'''
   
 if __name__ == '__main__':
 
-	c = ClientController()
-	c.run()
+	ut.cls()
+	print('PythonChat 2019 Client running')
+	print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+	print("Press CTRL-C to Quit.")
+	
+	try:
+		c = ClientController()
+		c.run()
+
+	except KeyboardInterrupt:
+
+		print("\nCTRL-C: Server shutting down")
+		print(" - Disconnecting all clients")
+
+		c.close()
+
+	finally:
+		pass
+
+	exit (0) # return 0 for successful completion
     
     
 
