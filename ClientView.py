@@ -13,6 +13,7 @@ class ClientWindow(tk.Tk):
 
 		self.CONTROLLER = controller
 
+		#list of frames
 		FrameTouple = (Login, ClientView)
 
 		#basic font
