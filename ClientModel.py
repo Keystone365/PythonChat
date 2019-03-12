@@ -10,7 +10,6 @@ from datetime import datetime
 import tkinter
 import queue
 import os
-import threading
 import logging
 
 from socket import *

@@ -1,6 +1,7 @@
 
 import queue
 import time
+import threading
 from socket import *
 
 class Reciever():
@@ -10,7 +11,7 @@ class Reciever():
 
 	#client socket setup
 	CLIENT = socket(AF_INET, SOCK_STREAM)
-	CLIENT.settimeout(10) #set time out value
+	#CLIENT.settimeout(10) #set time out value
 
 	recieveBufferSize = 1024
 	sendBufferSize = 1024
@@ -28,12 +29,13 @@ class Reciever():
 		self.PORT = port
 		self.ADDR = (self.HOST, self.PORT)
 
+
 		#try to connect to server
 		closeAttempt= time.time() + 30
 
 		while ((not self.clientConnect) and (time.time() < closeAttempt)):
 			try:
-				print('Atemptting to Connect...')
+				print('Atempting to Connect...')
 				self.CLIENT.connect(self.ADDR)
 				print('Connected to server.')
 				self.clientConnect = True
@@ -47,37 +49,38 @@ class Reciever():
 		if self.clientConnect == False:
 			print('Connection with server failed. Please try again at a different time.')
 			return -1
+		else:
 
-		#print("Loaded previous users")
-		sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
-		sendingThread.daemon = True
-		sendingThread.start() # start accepting connections
-		THREADS.append(sendMessageThread) # catalog the thread in the master list
+			#print("Loaded previous users")
+			'''sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
+			sendingThread.daemon = True
+			sendingThread.start() # start accepting connections
+			THREADS.append(sendMessageThread) # catalog the thread in the master list
 
-		#print("Accepting new connections")
-		receivingThread = threading.Thread(target = Recieve_Thread, args = ()) # generate a thread to send all messages
-		recievingThread.daemon = True
-		recievingThread.start() # start asyncronusly sending messages
-		THREADS.append(readMessageThread) # catalog the thread in the master list
+			'''#print("Accepting new connections")
+			receivingThread = threading.Thread(target = self.Receive_Thread, args = ()) # generate a thread to send all messages
+			receivingThread.daemon = True
+			receivingThread.start() # start asyncronusly sending messages
+			self.THREADS.append(receivingThread) # catalog the thread in the master list
 
-	def Recieve_Thread(self):
+	def Receive_Thread(self):
 
-		while(runningStatus):
-			RecieveMethod()
+		while(self.runningStatus):
+			self.ReceiveMethod()
 			pass
 			
 
 
 	def Send_Thread(self, message):
 
-		while(runningStatus):
-			SendMethod()
+		while(self.runningStatus):
+			self.SendMethod()
 
 
 
 	def SendMethod(self):
 		
-		bMessage = REQUEST_QUEUE[0]
+		bMessage = REQUEST_QUEUE.get()
 
 		try:
 
@@ -98,12 +101,14 @@ class Reciever():
 		except Exception as er:
 			raise er
 
-	def RecieveMethod():
+	def ReceiveMethod(self):
+
+		#unexpected looping is occuring
 
 		try:
 
 			# Read message length and unpack it into an integer
-			bMessageLength = recieveAll(4)
+			bMessageLength = self.receiveAll(4)
 
 			print(str(bMessageLength))
 
@@ -111,18 +116,22 @@ class Reciever():
 
 			print(str(intLength))
 			    
-			serverMessage = recieveAll(intLength).decode()
+			serverMessage = self.receiveAll(intLength).decode()
 
 			print(str(serverMessage))
 			# Read the message data
-			return serverMessage
+			self.REPLY_QUEUE.put(str(serverMessage))
+
+			print("Finished Getting First Message")
+			bNo = self.CLIENT.recv(1056)
+			print(bNo)
 
 		except Exception as e:
 			raise e
     
 
 	'''Helper function to recv a number of bytes or return None if EOF is hit'''
-	def recieveAll(length):
+	def receiveAll(self, length):
 
 
 		#byte sequence
@@ -132,7 +141,7 @@ class Reciever():
 		while (length):
 
 			#recieve data
-			packet = CLIENT.recv(length)
+			packet = self.CLIENT.recv(length)
 
 			if not packet: return None
 			data += packet
@@ -142,9 +151,9 @@ class Reciever():
 		return data
 
 	def close(self):
-		runningStatus = False # set flag to force threads to end
+		self.runningStatus = False # set flag to force threads to end
 
-		for thread in THREADS:
+		for thread in self.THREADS:
 			thread.join()
-			THREADS.remove(thread)
+			self.THREADS.remove(thread)
 			

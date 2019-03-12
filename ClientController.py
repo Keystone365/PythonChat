@@ -2,6 +2,7 @@ import tkinter as tk # python 3
 import util.utility as ut
 import queue
 
+from socket import *
 from datetime import datetime
 
 from ClientModel import ClientModel
@@ -28,6 +29,10 @@ class ClientController():
     def run(self):
         self.cWindow.run()
 
+    def Connect(self):
+        self.reciever.Start("127.0.0.1", 5006)
+
+
     def login_handler(self, server, port, username):
         
         #set model info
@@ -37,6 +42,7 @@ class ClientController():
 
         #change frame
         self.PrintMessage()
+        self.Connect()
 
         pass
 
