@@ -41,6 +41,68 @@ class ServerController():
     def __init__(self):
         pass
 
+    def Run(self):
+
+        #variables
+        loginAttempts = 0
+
+        print('PythonChat 2018 Server running')
+        print(gethostname())  
+        print('Listening on port: ' + str(self.PORT))
+        print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
+
+
+        
+        # block until a connection arrives (timeout 1 second)
+        connectionSocket, addr = self.SERVER.accept() 
+        
+        print("Connected with Server")
+        # store the connection to the list
+        #USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
+        #CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+
+        message = "Hello World from the server!"
+        bMessage = message.encode()
+
+        length = len(bMessage)
+
+        connectionSocket.sendall(struct.pack('>I', length))
+        connectionSocket.sendall(bMessage)
+        print("Sent first message")
+
+    def close(self):
+
+        logger.info('# nCTRL-C: Server shutting down')
+        logger.info('# - Disconnecting all clients')
+        
+        # notify all users and close connections
+        for client in USER_CONNECTIONS: 
+            try:
+                sendMessage(client[0], "SYSTEM: Server closed")
+            except ConnectionResetError: # client closed program
+                pass
+            finally:
+                client[0].close() # close connection
+            
+        
+        logger.info('# Clients successfully disconnected')        
+        print(" - All clients disconnected")
+
+        # set flag to force threads to end
+        THREADS_JOIN = True 
+        
+        for thread in THREADS:
+            print('Thread Ending:' + str(thread))
+            thread.join()
+            THREADS.remove(thread)
+        
+        logger.info('# All threads ended') 
+        print(" - All threads ended")
+
+        #ut.cls()
+        print('\nPythonChat Server cleanup and exit...done!')
+        SERVER.close()
+
 
     #sends message according to little endian unsigned int using format characters '<I'
 
@@ -566,66 +628,9 @@ class ServerController():
 
 
 
-    def Run(self):
-
-        #variables
-        loginAttempts = 0
-
-        print('PythonChat 2018 Server running')
-        print(gethostname())  
-        print('Listening on port: ' + str(self.PORT))
-        print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
 
-        
-        # block until a connection arrives (timeout 1 second)
-        connectionSocket, addr = self.SERVER.accept() 
-        
-        print("Connected with Server")
-        # store the connection to the list
-        #USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-        #CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
 
-        message = "Hello World from the server!"
-        bMessage = message.encode()
-
-        length = len(bMessage)
-
-        connectionSocket.sendall(struct.pack('>I', length))
-        connectionSocket.sendall(bMessage)
-
-    def close(self):
-
-        logger.info('# nCTRL-C: Server shutting down')
-        logger.info('# - Disconnecting all clients')
-        
-        # notify all users and close connections
-        for client in USER_CONNECTIONS: 
-            try:
-                sendMessage(client[0], "SYSTEM: Server closed")
-            except ConnectionResetError: # client closed program
-                pass
-            finally:
-                client[0].close() # close connection
-            
-        
-        logger.info('# Clients successfully disconnected')        
-        print(" - All clients disconnected")
-
-        # set flag to force threads to end
-        THREADS_JOIN = True 
-        
-        for thread in THREADS:
-            print('Thread Ending:' + str(thread))
-            thread.join()
-            THREADS.remove(thread)
-        
-        logger.info('# All threads ended') 
-        print(" - All threads ended")
-
-        #ut.cls()
-        print('\nPythonChat Server cleanup and exit...done!')
-        SERVER.close()
 
 
 

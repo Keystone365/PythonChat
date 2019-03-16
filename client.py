@@ -12,13 +12,14 @@ TCP TKinter Multi Client Python Chat Project.
   
 if __name__ == '__main__':
 
-	ut.cls()
 	print('PythonChat 2019 Client running')
 	print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 	print("Press CTRL-C to Quit.")
 	
+	
+	c = ClientController()
+
 	try:
-		c = ClientController()
 		c.run()
 
 	except KeyboardInterrupt:
@@ -26,10 +27,15 @@ if __name__ == '__main__':
 		print("\nCTRL-C: Server shutting down")
 		print(" - Disconnecting all clients")
 
-		c.close()
+	except Error as er:
+		print("Error occured in client controller")
+		print (er)
+
 
 	finally:
 		pass
+		print("successfully closed client")
+		c.close()
 
 	exit (0) # return 0 for successful completion
     

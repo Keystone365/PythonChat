@@ -20,6 +20,7 @@ class ClientController():
     IN_MESSAGE_QUEUE = queue.Queue()
     model = ClientModel()
     reciever = Reciever(IN_MESSAGE_QUEUE, OUT_MESSAGE_QUEUE)
+    bClose = False
     
     
 
@@ -29,8 +30,15 @@ class ClientController():
     def run(self):
         self.cWindow.run()
 
+
     def Connect(self):
-        self.reciever.Start("127.0.0.1", 5006)
+        try:
+            self.reciever.Start("127.0.0.1", 5006)
+        except Error as er:
+            print("Exception occured with connect")
+            raise er
+
+        
 
 
     def login_handler(self, server, port, username):
@@ -81,7 +89,12 @@ class ClientController():
         return self.model.serverIP
 
     def close(self):
-        self.cWindow.close_windows()
+
+        if (not self.bClose):
+            print("Closing Client ClientController")
+            self.reciever.close()
+            self.cWindow.close_windows()
+            self.bClose = True
 
 
 

@@ -37,7 +37,7 @@ class Reciever():
 			try:
 				print('Atempting to Connect...')
 				self.CLIENT.connect(self.ADDR)
-				print('Connected to server.')
+				#self.CLIENT.setblocking(0)
 				self.clientConnect = True
 
 			except ConnectionRefusedError:
@@ -50,6 +50,7 @@ class Reciever():
 			print('Connection with server failed. Please try again at a different time.')
 			return -1
 		else:
+			print('Connected to server.')
 
 			#print("Loaded previous users")
 			'''sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
@@ -63,17 +64,13 @@ class Reciever():
 			receivingThread.start() # start asyncronusly sending messages
 			self.THREADS.append(receivingThread) # catalog the thread in the master list
 
-	def Receive_Thread(self):
-
-		while(self.runningStatus):
-			self.ReceiveMethod()
-			pass
-			
-
 
 	def Send_Thread(self, message):
 
+
+
 		while(self.runningStatus):
+			print(self.runningStatus)
 			self.SendMethod()
 
 
@@ -101,6 +98,12 @@ class Reciever():
 		except Exception as er:
 			raise er
 
+	def Receive_Thread(self):
+
+		while(self.runningStatus):
+			self.ReceiveMethod()
+			pass
+
 	def ReceiveMethod(self):
 
 		#unexpected looping is occuring
@@ -109,6 +112,9 @@ class Reciever():
 
 			# Read message length and unpack it into an integer
 			bMessageLength = self.receiveAll(4)
+			if bMessageLength is None:
+				#print(bMessageLength)
+				return
 
 			print(str(bMessageLength))
 
