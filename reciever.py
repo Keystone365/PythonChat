@@ -1,10 +1,11 @@
 
 import queue
 import time
+#from ClientController import ClientController
 import threading
 from socket import *
 
-class Reciever():
+class ClientReciever():
 
 	THREADS = []
 	
@@ -20,9 +21,9 @@ class Reciever():
 	clientConnect = False
 	delay=6 #<- Change to 30. For debug purposes
 
-	def __init__(self, in_queue, out_queue):
-		self.REPLY_QUEUE = in_queue
-		self.REQUEST_QUEUE = out_queue
+	def __init__(self, Controller, out_queue):
+		self.controller = Controller
+		self.OUT_MESSAGE_QUEUE = out_queue
 
 	def Start(self, server, port):
 		self.HOST = server
@@ -65,19 +66,14 @@ class Reciever():
 			self.THREADS.append(receivingThread) # catalog the thread in the master list
 
 
-	def Send_Thread(self, message):
-
-
+	def Send_Thread(self):
 
 		while(self.runningStatus):
-			print(self.runningStatus)
 			self.SendMethod()
 
 
 
 	def SendMethod(self):
-		
-		bMessage = REQUEST_QUEUE.get()
 
 		try:
 
@@ -87,6 +83,11 @@ class Reciever():
 			# Prefix each message with a 4-byte length (network byte order)
 			#'>' means little endian, 'I' means unsigned integer
 			#CLIENT.send sends entire message as series of send
+
+			message = self.OUT_MESSAGE_QUEUE.get()
+
+			if message is None:
+				pass
 
 			bMessage = message.encode()
 
@@ -126,7 +127,8 @@ class Reciever():
 
 			print(str(serverMessage))
 			# Read the message data
-			self.REPLY_QUEUE.put(str(serverMessage))
+			
+			self.controller.Reply_Handler(serverMessage)
 
 			print("Finished Getting First Message")
 			bNo = self.CLIENT.recv(1056)

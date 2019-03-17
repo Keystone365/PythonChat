@@ -31,9 +31,7 @@ if __name__ == '__main__':
 		print("Error occured in client controller")
 		print (er)
 
-
 	finally:
-		pass
 		print("successfully closed client")
 		c.close()
 

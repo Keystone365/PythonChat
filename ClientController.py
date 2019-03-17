@@ -1,13 +1,14 @@
 import tkinter as tk # python 3
 import util.utility as ut
 import queue
+import threading
 
 from socket import *
 from datetime import datetime
 
 from ClientModel import ClientModel
 from ClientView import ClientWindow
-from reciever import Reciever
+from reciever import ClientReciever
 
 #from Handlers import *
 
@@ -17,15 +18,14 @@ from reciever import Reciever
 class ClientController():
 
     OUT_MESSAGE_QUEUE = queue.Queue()
-    IN_MESSAGE_QUEUE = queue.Queue()
     model = ClientModel()
-    reciever = Reciever(IN_MESSAGE_QUEUE, OUT_MESSAGE_QUEUE)
     bClose = False
     
     
 
     def __init__(self, *args, **kwargs):
         self.cWindow = ClientWindow(self)
+        self.reciever = ClientReciever(self, self.OUT_MESSAGE_QUEUE)
 
     def run(self):
         self.cWindow.run()
@@ -34,11 +34,10 @@ class ClientController():
     def Connect(self):
         try:
             self.reciever.Start("127.0.0.1", 5006)
+
         except Error as er:
             print("Exception occured with connect")
-            raise er
-
-        
+            raise er  
 
 
     def login_handler(self, server, port, username):
@@ -54,15 +53,13 @@ class ClientController():
 
         pass
 
-    def Reply_Handler(self, message):
-        self.cWindow.show_frame("ClientView")
-        frame = self.cWindow.frames["ClientView"]
-        frame.Update_Messages(message)
+    def Reply_Handler(self, reply):
+        frame = self.cWindow.current_frame()
+        frame.Update_Messages("\n" + reply)
         pass
 
     def Send_Handler(self, message):
-        self.cWindow.show_frame("ClientView")
-        frame = self.cWindow.frames["ClientView"]
+        frame = self.cWindow.current_frame()
         sMessage = "\n" + self.model.username + ":" + message
         frame.Update_Messages(sMessage)
         pass
@@ -70,17 +67,17 @@ class ClientController():
 
     #Return key press handler
     def Return_Key_Handler(self, event):
-        frame = self.cWindow.frames["ClientView"]
+        frame = self.cWindow.current_frame()
         frame.Reply_Message()
         pass
 
     def PrintMessage(self):
-        self.Reply_Handler('PythonChat 2019 Client running\n')
+        self.Reply_Handler('PythonChat 2019 Client running')
         self.Reply_Handler('Host IP: ' + self.model.clientIP)    
-        self.Reply_Handler('\nServer IP: ' + self.model.serverIP)  
-        self.Reply_Handler('\nListening on port: ' + str(self.model.clientPort))
-        self.Reply_Handler('\nStartup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        self.Reply_Handler("\nEstablishing connection....\nPress CTRL-C to Quit.")
+        self.Reply_Handler('Server IP: ' + self.model.serverIP)  
+        self.Reply_Handler('Listening on port: ' + str(self.model.clientPort))
+        self.Reply_Handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.Reply_Handler("Establishing connection....")
 
     def GetServerPort(self):
         return self.model.serverPort

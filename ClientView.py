@@ -7,6 +7,7 @@ from tkinter import font  as tkfont
 
 class ClientWindow(tk.Tk):
 
+	
 
 	def __init__(self, controller, *args, **kwargs):
 		tk.Tk.__init__(self, *args, **kwargs)
@@ -32,6 +33,7 @@ class ClientWindow(tk.Tk):
 		self.frames = {}
 		for F in FrameTouple: #login
 			page_name = F.__name__
+			print(str(page_name))
 			frame = F(container, self.CONTROLLER)
 			self.frames[page_name] = frame
 
@@ -54,6 +56,11 @@ class ClientWindow(tk.Tk):
 		'''Show a frame for the given page name'''
 		frame = self.frames[page_name]
 		frame.tkraise()
+		self.currentFrame = frame
+
+	def current_frame(self):
+		return self.currentFrame
+
 
 
 class ClientView(tk.Frame):

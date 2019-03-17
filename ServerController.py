@@ -4,13 +4,20 @@ import csv
 import threading
 import sys
 import struct
-import queue
 import time
 import logging
 from datetime import datetime
+from ServerModel import ServerModel
 #from IOBlocking import sendMessage, recvMessage, recvAll 
 from socket import *
 
+
+LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
+logging.basicConfig(filename = "util/ServerChatLog.log",
+                    level = logging.DEBUG,
+                    format = LOG_FORMAT,
+                    filemode = 'w')
+logger = logging.getLogger() #root logger
 
 class ServerController():
 
@@ -19,12 +26,7 @@ class ServerController():
     THREADS_JOIN = False # Boolean flag for ending threads
 
     #set up logger
-    LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
-    logging.basicConfig(filename = "util/ServerChatLog.log",
-                        level = logging.DEBUG,
-                        format = LOG_FORMAT,
-                        filemode = 'w')
-    logger = logging.getLogger() #root logger
+
 
 
 
@@ -39,7 +41,8 @@ class ServerController():
     SERVER.listen(5)
 
     def __init__(self):
-        pass
+        self.model = ServerModel()
+        self.LoadInfo()
 
     def Run(self):
 
@@ -56,19 +59,13 @@ class ServerController():
         # block until a connection arrives (timeout 1 second)
         connectionSocket, addr = self.SERVER.accept() 
         
-        print("Connected with Server")
+        print("Connected with Client")
         # store the connection to the list
-        #USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
+        self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
         #CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
 
         message = "Hello World from the server!"
-        bMessage = message.encode()
-
-        length = len(bMessage)
-
-        connectionSocket.sendall(struct.pack('>I', length))
-        connectionSocket.sendall(bMessage)
-        print("Sent first message")
+        self.sendMessage(connectionSocket, message)
 
     def close(self):
 
@@ -76,9 +73,9 @@ class ServerController():
         logger.info('# - Disconnecting all clients')
         
         # notify all users and close connections
-        for client in USER_CONNECTIONS: 
+        for client in self.model.USER_CONNECTIONS: 
             try:
-                sendMessage(client[0], "SYSTEM: Server closed")
+                self.sendMessage(client[0], "SYSTEM: Server closed")
             except ConnectionResetError: # client closed program
                 pass
             finally:
@@ -89,26 +86,26 @@ class ServerController():
         print(" - All clients disconnected")
 
         # set flag to force threads to end
-        THREADS_JOIN = True 
+        self.THREADS_JOIN = True 
         
-        for thread in THREADS:
+        for thread in self.model.THREADS:
             print('Thread Ending:' + str(thread))
             thread.join()
-            THREADS.remove(thread)
+            self.model.THREADS.remove(thread)
         
         logger.info('# All threads ended') 
         print(" - All threads ended")
 
         #ut.cls()
         print('\nPythonChat Server cleanup and exit...done!')
-        SERVER.close()
+        self.SERVER.close()
 
 
     #sends message according to little endian unsigned int using format characters '<I'
 
     ###############################SEND#AND#RECIEVE#FUNCTIONS#####################################
 
-    def sendMessage(client, message):
+    def sendMessage(self, client, message):
 
         '''Sends message according to little endian 
         unsigned int using format characters '<I'''
@@ -172,7 +169,7 @@ class ServerController():
         
             userList = ""
         
-            for client in USER_CONNECTIONS: # find the sending user
+            for client in self.model.USER_CONNECTIONS: # find the sending user
                 if message[0] == client[3]:
                     
                     # for each online authenticate user create name list
@@ -303,7 +300,7 @@ class ServerController():
         '''Load stored list of authenticated users from user.csv '''
 
         logger.info("In loading user function")
-        file = open(UserPath, "r") # open the authentication file for reading
+        file = open(self.model.UserPath, "r") # open the authentication file for reading
         text = file.read().splitlines() # read in all lines of the file
         file.close() # close the file
         logger.info("File Open in LoadUserList function")
@@ -312,7 +309,7 @@ class ServerController():
             UserValues = line.split(",") # parse out the username and password hash
             UserValues.append(0) # number of failed login attempts
             UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
-            AUTHENTIC_USERS.append(UserValues) # store the object for later authentication
+            self.model.AUTHENTIC_USERS.append(UserValues) # store the object for later authentication
         
         logger.info("Successfully loaded csv in LoadUserList function")
 
@@ -326,14 +323,14 @@ class ServerController():
         logger.info('Loading messages in LoadMessageList function')
         
         # open the authentication file for reading
-        file = open(MessagePath, "r") 
+        file = open(self.model.MessagePath, "r") 
         text = file.read().splitlines()
         file.close()
 
         # itterate through all the lines
         for line in text: 
             MessageValues = line.split(",") #Get message values
-            CLIENT_MESSAGE_QUEUE.put(MessageValues) # store the object for later authentication
+            self.model.CLIENT_MESSAGE_QUEUE.put(MessageValues) # store the object for later authentication
         
         logger.info("Successfully loaded csv in LoadMessageList function")
 
@@ -343,7 +340,7 @@ class ServerController():
 
         '''Save known users to CSV file at util/users.csv'''
         
-        file = open(UserPath, "a") # open authentication file to permanently save account
+        file = open(self.model.UserPath, "a") # open authentication file to permanently save account
         file.write(Name + "," + Pass + "\n") # write the data to file
         file.close()
        
@@ -357,7 +354,7 @@ class ServerController():
 
         usernameExists = False # set flag
 
-        for account in AUTHENTIC_USERS: 
+        for account in self.model.AUTHENTIC_USERS: 
             if account[0] == username: # if username already exists
                 usernameExists = True # set flag
                 break # no sense continuing to search
@@ -623,8 +620,8 @@ class ServerController():
     #################################MAIN##############################################         
      
     def LoadInfo(self):
-        LoadUserList()
-        LoadMessageList()
+        self.LoadUserList()
+        self.LoadMessageList()
 
 
 
