@@ -1,7 +1,6 @@
 
-from ClientController import ClientController
+from src.Client.ClientController import ClientController
 from datetime import datetime
-import util.utility as ut
 
 '''
 Author: Andrew Christianson

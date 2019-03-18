@@ -1,4 +1,5 @@
 import queue
+from socket import *
 
 
 class ServerModel:
@@ -48,8 +49,21 @@ class ServerModel:
 	onlineUsers = []
 
 	#paths for CSV files
-	UserPath = 'util/users.csv'
-	MessagePath = 'util/messages.csv'
+	UserPath = 'data/users.csv'
+	MessagePath = 'data/messages.csv'
+
+	THREADS_JOIN = False # Boolean flag for ending threads
+
+	HOST = "127.0.0.1"
+	PORT = 5006
+	BUFSIZ = 1024
+	ADDR = (HOST, PORT)
+
+	SERVER = socket(AF_INET, SOCK_STREAM)
+	SERVER.bind(ADDR)
+	#SERVER.settimeout(6) #set time out value
+	SERVER.listen(5)
+	bClose = False
 
 	def __init__(self):
 		pass

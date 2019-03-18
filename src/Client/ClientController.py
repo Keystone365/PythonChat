@@ -1,14 +1,14 @@
 import tkinter as tk # python 3
-import util.utility as ut
 import queue
 import threading
 
 from socket import *
 from datetime import datetime
 
-from ClientModel import ClientModel
-from ClientView import ClientWindow
-from reciever import ClientReciever
+from src.Client.ClientModel import ClientModel
+from src.Client.ClientView import ClientWindow
+from src.Client.ClientReciever import ClientReciever
+from util.utility import *
 
 #from Handlers import *
 

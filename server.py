@@ -1,5 +1,5 @@
 
-from ServerController import ServerController;
+from src.Server.ServerController import ServerController;
 import util.utility as ut
 
 if __name__ == '__main__':

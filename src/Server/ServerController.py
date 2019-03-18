@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import util.utility as ut
+from util.utility import *
 import csv
 import threading
 import sys
@@ -7,13 +7,14 @@ import struct
 import time
 import logging
 from datetime import datetime
-from ServerModel import ServerModel
+from src.Server.ServerModel import ServerModel
+from src.Server.ServerView import ServerWindow
 #from IOBlocking import sendMessage, recvMessage, recvAll 
 from socket import *
 
 
 LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
-logging.basicConfig(filename = "util/ServerChatLog.log",
+logging.basicConfig(filename = "ServerChatLog.log",
                     level = logging.DEBUG,
                     format = LOG_FORMAT,
                     filemode = 'w')
@@ -21,84 +22,74 @@ logger = logging.getLogger() #root logger
 
 class ServerController():
 
-
-    #print_lock = threading.Lock()
-    THREADS_JOIN = False # Boolean flag for ending threads
-
-    #set up logger
-
-
-
-
-    HOST = "127.0.0.1"
-    PORT = 5006
-    BUFSIZ = 1024
-    ADDR = (HOST, PORT)
-
-    SERVER = socket(AF_INET, SOCK_STREAM)
-    SERVER.bind(ADDR)
-    #SERVER.settimeout(6) #set time out value
-    SERVER.listen(5)
-
     def __init__(self):
+        self.sWindow = ServerWindow(self)
         self.model = ServerModel()
         self.LoadInfo()
+        print()
 
     def Run(self):
 
-        #variables
-        loginAttempts = 0
-
         print('PythonChat 2018 Server running')
         print(gethostname())  
-        print('Listening on port: ' + str(self.PORT))
+        print('Listening on port: ' + str(self.model.PORT))
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
+        print("Entering Accept Thread")
 
-        
-        # block until a connection arrives (timeout 1 second)
-        connectionSocket, addr = self.SERVER.accept() 
-        
-        print("Connected with Client")
-        # store the connection to the list
-        self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-        #CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+        #Start Accept Thread
+        acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
+        acceptThread.daemon = True
+        acceptThread.start() 
+        self.model.THREADS.append(acceptThread) 
 
-        message = "Hello World from the server!"
-        self.sendMessage(connectionSocket, message)
+        #open window
+        self.sWindow.run()
+
 
     def close(self):
 
-        logger.info('# nCTRL-C: Server shutting down')
-        logger.info('# - Disconnecting all clients')
-        
-        # notify all users and close connections
-        for client in self.model.USER_CONNECTIONS: 
-            try:
-                self.sendMessage(client[0], "SYSTEM: Server closed")
-            except ConnectionResetError: # client closed program
-                pass
-            finally:
-                client[0].close() # close connection
+        if (not self.model.bClose):
+            print("Closing ServerController")
+            self.sWindow.close_windows()
+            self.model.bClose = True
+
+            # set flag to force threads to end
+            self.model.THREADS_JOIN = True 
+
+            logger.info('# nCTRL-C: Server shutting down')
+            logger.info('# - Disconnecting all clients')
             
-        
-        logger.info('# Clients successfully disconnected')        
-        print(" - All clients disconnected")
+            # notify all users and close connections
+            for client in self.model.USER_CONNECTIONS: 
+                try:
+                    self.sendMessage(client[0], "SYSTEM: Server closed")
+                except ConnectionResetError: # client closed program
+                    pass
+                finally:
+                    client[0].close() # close connection
+                
+            
+            logger.info('# Clients successfully disconnected')        
+            print(" - All clients disconnected")
+            
+            for thread in self.model.THREADS:
+                print('Thread Ending:' + str(thread))
+                thread.join()
+                self.model.THREADS.remove(thread)
+            
+            logger.info('# All threads ended') 
+            print(" - All threads ended")
 
-        # set flag to force threads to end
-        self.THREADS_JOIN = True 
-        
-        for thread in self.model.THREADS:
-            print('Thread Ending:' + str(thread))
-            thread.join()
-            self.model.THREADS.remove(thread)
-        
-        logger.info('# All threads ended') 
-        print(" - All threads ended")
+            #ut.cls()
+            print('\nPythonChat Server cleanup and exit...done!')
+            self.model.SERVER.close()
 
-        #ut.cls()
-        print('\nPythonChat Server cleanup and exit...done!')
-        self.SERVER.close()
+    def Handler():
+        pass
+
+    def Return_Key_Handler(self, event):
+        pass
 
 
     #sends message according to little endian unsigned int using format characters '<I'
@@ -190,7 +181,7 @@ class ServerController():
 
         '''Handles broadcast messages to all users'''
 
-        for user in USER_CONNECTIONS:
+        for user in self.model.USER_CONNECTIONS:
         
             if user[2] == "ONLINE":
             
@@ -204,7 +195,7 @@ class ServerController():
                     user[2] = "DISCONNECTED"
                     pass # no worries, it's just a broadcast
                 
-        SERVER_MESSAGE_QUEUE.put(message[0] + ": " + message[2]) # echo the message to the server terminal
+        self.model.SERVER_MESSAGE_QUEUE.put(message[0] + ": " + message[2]) # echo the message to the server terminal
         
     def PrivateMessage(self, message = []):
 
@@ -215,7 +206,7 @@ class ServerController():
 
         # if this is a new message, not an offline queued message
         if message[3] == True: 
-            for user in USER_CONNECTIONS: # check for the target user
+            for user in self.model.USER_CONNECTIONS: # check for the target user
                 if message[1] == user[3]: # if the user is found
                     userOnline = True
                     
@@ -276,7 +267,7 @@ class ServerController():
 
         '''Function checks whether stored messages are available, sends stored messages'''
         
-        for sender, reciever, message in STOREDMESSAGES:
+        for sender, reciever, message in self.model.STOREDMESSAGES:
             if client[2] == reciever:
                 send(client[2], "FROM " + client[3] + ": " + message)
                        
@@ -438,17 +429,29 @@ class ServerController():
 
         '''Function for accepting incoming client socket connections'''
 
-        while not THREADS_JOIN:
+        print("In Accept Thread")
+
+        while not self.model.THREADS_JOIN:
             try:
+
+                print("Attempting to connect")
                 # block until a connection arrives (timeout 1 second)
-                connectionSocket, addr = SERVER.accept() 
+                connectionSocket, addr = self.model.SERVER.accept() 
+
+                print("Connected!")
                 
                 # store the connection to the list
-                USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-                CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+                self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
+                self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+
+
+                message = "Hello World from the server!"
+                self.sendMessage(connectionSocket, message)
                 
             except timeout:
                 pass # not a problem, just loop back
+            except Error as er:
+                raise er
                 
     def ClientMessageHandler(self):
 
@@ -456,7 +459,7 @@ class ServerController():
         
         logger.debug('Handler for')
 
-        while not THREADS_JOIN:
+        while not self.model.THREADS_JOIN:
             try:
             
                 message = CLIENT_MESSAGE_QUEUE.get(timeout=1) # pop the front message off the queue
@@ -492,7 +495,7 @@ class ServerController():
 
         '''Print list of online users every 10 seconds'''
         
-        while not THREADS_JOIN:
+        while not self.model.THREADS_JOIN:
             time.sleep(10) # wait 10 seconds
             try:
             
@@ -642,10 +645,7 @@ class ServerController():
         LoadInfo()
 
         # generate a thread to accept connections
-        acceptThread = threading.Thread(target = acceptConnections, args = ()) 
-        acceptThread.daemon = True
-        acceptThread.start() 
-        THREADS.append(acceptThread) 
+
 
         # generate thread to asyncronusly send messages
         outgoingMessagesThread = threading.Thread(target = ClientMessageHandler, args = ()) 
