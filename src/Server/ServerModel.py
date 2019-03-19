@@ -14,6 +14,7 @@ class ServerModel:
 	# for each element of AUTHENTIC_USERS
 	# [0]: user
 	# [1]: passhash
+	# [2]: admin
 
 
 	USER_CONNECTIONS = [] #For listing number of user connections
@@ -61,7 +62,7 @@ class ServerModel:
 
 	SERVER = socket(AF_INET, SOCK_STREAM)
 	SERVER.bind(ADDR)
-	#SERVER.settimeout(6) #set time out value
+	SERVER.settimeout(3) #set time out value
 	SERVER.listen(5)
 	bClose = False
 

@@ -14,7 +14,7 @@ from socket import *
 
 
 LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
-logging.basicConfig(filename = "ServerChatLog.log",
+logging.basicConfig(filename = "data/ServerChatLog.log",
                     level = logging.DEBUG,
                     format = LOG_FORMAT,
                     filemode = 'w')
@@ -23,10 +23,10 @@ logger = logging.getLogger() #root logger
 class ServerController():
 
     def __init__(self):
+        logger.info('Initializing controller')
         self.sWindow = ServerWindow(self)
         self.model = ServerModel()
         self.LoadInfo()
-        print()
 
     def Run(self):
 
@@ -35,29 +35,21 @@ class ServerController():
         print('Listening on port: ' + str(self.model.PORT))
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
-        print("Entering Accept Thread")
-
-        #Start Accept Thread
-        acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
-        acceptThread.daemon = True
-        acceptThread.start() 
-        self.model.THREADS.append(acceptThread) 
-
-        #open window
+        logger.info("Starting window")
         self.sWindow.run()
 
 
     def close(self):
 
         if (not self.model.bClose):
-            print("Closing ServerController")
+            logger.info("Closing ServerController")
             self.sWindow.close_windows()
             self.model.bClose = True
+            self.model.THREADS_JOIN = True
 
             # set flag to force threads to end
             self.model.THREADS_JOIN = True 
 
-            logger.info('# nCTRL-C: Server shutting down')
             logger.info('# - Disconnecting all clients')
             
             # notify all users and close connections
@@ -71,15 +63,13 @@ class ServerController():
                 
             
             logger.info('# Clients successfully disconnected')        
-            print(" - All clients disconnected")
             
             for thread in self.model.THREADS:
-                print('Thread Ending:' + str(thread))
+                logger.info('Thread Ending:' + str(thread))
                 thread.join()
                 self.model.THREADS.remove(thread)
             
             logger.info('# All threads ended') 
-            print(" - All threads ended")
 
             #ut.cls()
             print('\nPythonChat Server cleanup and exit...done!')
@@ -91,6 +81,30 @@ class ServerController():
     def Return_Key_Handler(self, event):
         pass
 
+    def login_handler(self, username, password):
+
+        if(not self.in_list(username, password, "1")):
+            print("not in admin user list")
+            self.sWindow.login_warning()
+        else: 
+            self.sWindow.show_frame("ServerView")
+
+            logger.info("Entering Accept Thread")
+
+            #Start Accept Thread
+            acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
+            acceptThread.daemon = True
+            acceptThread.start() 
+            self.model.THREADS.append(acceptThread)
+
+    def in_list(self, username, passhash, admin):
+
+        for account in self.model.AUTHENTIC_USERS: #itterate through account list
+            # if username found, password correct and admin privliges
+            if (account[0] == username) and (account[1] == passhash) and (account[2] == admin):
+                return True
+        #return false if no user match
+        return False
 
     #sends message according to little endian unsigned int using format characters '<I'
 
@@ -285,6 +299,13 @@ class ServerController():
     #########################CVS LOAD AND SAVE FUNCTIONS##########################################
 
 
+
+    def LoadInfo(self):
+        self.LoadUserList()
+        logger.info('Loading messages in LoadMessageList function')
+        self.LoadQueue(self.model.MessagePath, self.model.CLIENT_MESSAGE_QUEUE)
+        logger.info("Successfully loaded csv in LoadList function")
+
     #Check User CSV: returns list of CSV file contents
     def LoadUserList(self):
 
@@ -298,30 +319,26 @@ class ServerController():
 
         for line in text: # itterate through all the lines
             UserValues = line.split(",") # parse out the username and password hash
-            UserValues.append(0) # number of failed login attempts
-            UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
+            #UserValues.append(0) # number of failed login attempts
+            #UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
             self.model.AUTHENTIC_USERS.append(UserValues) # store the object for later authentication
-        
-        logger.info("Successfully loaded csv in LoadUserList function")
 
           
           
     #returns message list for user        
-    def LoadMessageList(self):
+    def LoadQueue(self, filepath, listQueue):
 
         '''Load stored unsent messages from messages.csv '''
-
-        logger.info('Loading messages in LoadMessageList function')
         
         # open the authentication file for reading
-        file = open(self.model.MessagePath, "r") 
+        file = open(filepath, "r") 
         text = file.read().splitlines()
         file.close()
 
         # itterate through all the lines
         for line in text: 
             MessageValues = line.split(",") #Get message values
-            self.model.CLIENT_MESSAGE_QUEUE.put(MessageValues) # store the object for later authentication
+            listQueue.put(MessageValues) # store the object for later authentication
         
         logger.info("Successfully loaded csv in LoadMessageList function")
 
@@ -621,10 +638,7 @@ class ServerController():
              
              
     #################################MAIN##############################################         
-     
-    def LoadInfo(self):
-        self.LoadUserList()
-        self.LoadMessageList()
+
 
 
 

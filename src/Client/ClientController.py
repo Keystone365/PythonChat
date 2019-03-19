@@ -33,7 +33,8 @@ class ClientController():
 
     def Connect(self):
         try:
-            self.reciever.Start("127.0.0.1", 5006)
+            bStart = self.reciever.Start("127.0.0.1", 5006)
+            return bStart
 
         except Error as er:
             print("Exception occured with connect")
@@ -43,13 +44,21 @@ class ClientController():
     def login_handler(self, server, port, username):
         
         #set model info
-        self.model.loginCommand(server, port, username)
-        self.cWindow.show_frame("ClientView")
-        #self.reciever.Start(server, port)
+        self.model.SetLogin(server, port, username)
+
+
+
+        bStart = self.Connect()
+
+
+
+        if(bStart):
+            self.cWindow.show_frame("ClientView")
+            #self.reciever.Start(server, port)
 
         #change frame
         self.PrintMessage()
-        self.Connect()
+        
 
         pass
 

@@ -41,20 +41,11 @@ class ClientModel:
 		self.CLIENT_MESSAGE_QUEUE = queue.Queue()
 		self.USERNAME = []
 
-	def loginCommand(self, Server, Port, Username):
+	def SetLogin(self, Server, Port, Username):
 		self.server = Server
 		self.port = Port
 		self.username = Username
 		print(self.server + ", " + str(self.port) + ", " + self.username)
-
-
-		#sendMessage(request)
-
-
-
-	def calculate(self):
-		z = 1 + 1
-
 
 
 #messages sent 

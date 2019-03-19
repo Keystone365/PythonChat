@@ -59,6 +59,9 @@ class ServerWindow(tk.Tk):
 	def current_frame(self):
 		return self.currentFrame
 
+	def login_warning(self):
+		messagebox.showerror("Login Warning", "Admin user not found. Incorrect username or password")
+
 
 
 class ServerView(tk.Frame):
