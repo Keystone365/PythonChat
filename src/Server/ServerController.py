@@ -92,10 +92,16 @@ class ServerController():
             logger.info("Entering Accept Thread")
 
             #Start Accept Thread
+            manageThread = threading.Thread(target = self.manageConnections, args = ()) 
+            manageThread.daemon = True
+            manageThread.start() 
+            self.model.THREADS.append(manageThread)
+
+            '''#Start Accept Thread
             acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
             acceptThread.daemon = True
             acceptThread.start() 
-            self.model.THREADS.append(acceptThread)
+            self.model.THREADS.append(acceptThread)'''
 
     def in_list(self, username, passhash, admin):
 
@@ -197,17 +203,17 @@ class ServerController():
 
         for user in self.model.USER_CONNECTIONS:
         
-            if user[2] == "ONLINE":
+        #if user[2] == "ONLINE":
             
-                # in case they went offline by surprise
-                try: 
-                    sendMessage(user[0], message[0] + ": " + message[2]) # send the message to this user
-                    
-                # if client closed program flag and disconnect
-                except ConnectionResetError: 
-                    client[0].close()
-                    user[2] = "DISCONNECTED"
-                    pass # no worries, it's just a broadcast
+            # in case they went offline by surprise
+            try: 
+                sendMessage(user[0], message[0] + ": " + message[2]) # send the message to this user
+                
+            # if client closed program flag and disconnect
+            except ConnectionResetError: 
+                client[0].close()
+                user[2] = "DISCONNECTED"
+                pass # no worries, it's just a broadcast
                 
         self.model.SERVER_MESSAGE_QUEUE.put(message[0] + ": " + message[2]) # echo the message to the server terminal
         
@@ -442,7 +448,7 @@ class ServerController():
 
     ##################################THREAD FUNCTIONS################################
         
-    def acceptConnections(self):
+    def manageConnections(self):
 
         '''Function for accepting incoming client socket connections'''
 
@@ -462,12 +468,14 @@ class ServerController():
                 self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
 
 
-                message = "Hello World from the server!"
-                self.sendMessage(connectionSocket, message)
+                recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket))
+                recieveThread.daemon = True
+                recieveThread.start()
+                self.model.THREADS.append(recieveThread)
                 
             except timeout:
                 pass # not a problem, just loop back
-            except Error as er:
+            except Exception as er:
                 raise er
                 
     def ClientMessageHandler(self):
@@ -581,15 +589,15 @@ class ServerController():
         '''Thread function for recieving messages from a client.'''
 
         logger.info('# RecieveMessages thread running') 
-        SERVER_MESSAGE_QUEUE.put("Starting to receive messages from " + client[3])
+        #self.model.SERVER_MESSAGE_QUEUE.put("Starting to receive messages from " + client[3])
         ClientDisconnect = False
        
-        while not THREADS_JOIN and not ClientDisconnect:
+        while not self.model.THREADS_JOIN and not ClientDisconnect:
             try:
              
-                data = recvMessage(client[0])
-                SERVER_MESSAGE_QUEUE.put("message received from " + client[3] + ": " + data)
-                message = data.split(",", 1)
+                data = recvMessage(client)
+                #SERVER_MESSAGE_QUEUE.put("message received from " + client[3] + ": " + data)
+                #message = data.split(",", 1)
                 
                 # message format: 
                 # "reciever, user:message" if private message,
@@ -597,7 +605,7 @@ class ServerController():
                 # "SYSTEM, DISCONNECT" for a controlled close of the client
                 # "SYSTEM, LIST"
                 
-                print(message)
+                print(data)
                 
                 '''
                 if message[0] == "SYSTEM": 
@@ -631,8 +639,9 @@ class ServerController():
                 
             # client closed program 
             except ConnectionResetError: 
-                client[0].close()
-                client[2] = "DISCONNECTED"
+                #client[0].close()
+                #client[2] = "DISCONNECTED"
+                print("ConnectionResetError occured.")
                 ClientDisconnect = True
 
              

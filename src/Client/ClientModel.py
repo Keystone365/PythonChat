@@ -9,20 +9,11 @@ from datetime import datetime
 import tkinter
 import queue
 import os
-import logging
 
 from socket import *
 from util.utility import *
 
 #NOTES: The Model interacts with the database. Acts as interface between data and the rest of the program
-
-#set up logger
-LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
-logging.basicConfig(filename = "data/ClientChatLog.log",
-                    level = logging.DEBUG,
-                    format = LOG_FORMAT,
-                    filemode = 'w')
-logger = logging.getLogger() #root logger
 
 class ClientModel:
 

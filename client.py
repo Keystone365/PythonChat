@@ -31,7 +31,6 @@ if __name__ == '__main__':
 		print (er)
 
 	finally:
-		print("successfully closed client")
 		c.close()
 
 	exit (0) # return 0 for successful completion

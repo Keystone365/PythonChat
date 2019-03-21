@@ -1,6 +1,7 @@
 import tkinter as tk # python 3
 import queue
 import threading
+import logging
 
 from socket import *
 from datetime import datetime
@@ -12,8 +13,15 @@ from util.utility import *
 
 #from Handlers import *
 
-#NOTE: Should handle I/O logic
+#NOTE: Controller should handle I/O logic
 
+#set up logger
+LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
+logging.basicConfig(filename = "data/ClientChatLog.log",
+                    level = logging.DEBUG,
+                    format = LOG_FORMAT,
+                    filemode = 'w')
+logger = logging.getLogger() #root logger
 
 class ClientController():
 
@@ -95,12 +103,12 @@ class ClientController():
         return self.model.serverIP
 
     def close(self):
-
         if (not self.bClose):
-            print("Closing Client ClientController")
+            logger.info("Closing Client ClientController")
             self.reciever.close()
             self.cWindow.close_windows()
             self.bClose = True
+            print('\nPythonChat Client cleanup and exit...done!')
 
 
 
