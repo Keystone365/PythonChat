@@ -4,7 +4,7 @@ import time
 import threading
 from socket import *
 
-class ClientReciever():
+class ServerReciever():
 
 	THREADS = []
 	#CLIENT.settimeout(10) #set time out value
@@ -16,42 +16,20 @@ class ClientReciever():
 	clientConnect = False
 	delay=6 #<- Change to 30. For debug purposes
 
-	def __init__(self, Client, Controller, out_queue):
-		self.client  = Client
-		self.controller = Controller
+	def __init__(self, Client, out_queue, Controller):
+		self.CLIENT  = Client
 		self.OUT_MESSAGE_QUEUE = out_queue
+		self.Controller = controller
 
 	def Start(self):
 
-		#try to connect to server
-		closeAttempt= time.time() + 30
-
-		while ((not self.clientConnect) and (time.time() < closeAttempt)):
-			try:
-				print('Atempting to Connect...')
-				self.CLIENT.connect(self.ADDR)
-				#self.CLIENT.setblocking(0)
-				self.clientConnect = True
-
-			except ConnectionRefusedError:
-				pass
-			except Exception as er:
-				print('Error thrown while connecting:')
-				raise er
-
-		if self.clientConnect == False:
-			print('Connection with server failed. Please try again at a different time.')
-			return -1
-		else:
-			print('Connected to server.')
-
 			#print("Loaded previous users")
-			'''sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
+			sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
 			sendingThread.daemon = True
 			sendingThread.start() # start accepting connections
 			THREADS.append(sendMessageThread) # catalog the thread in the master list
 
-			'''#print("Accepting new connections")
+			#print("Accepting new connections")
 			receivingThread = threading.Thread(target = self.Receive_Thread, args = ()) # generate a thread to send all messages
 			receivingThread.daemon = True
 			receivingThread.start() # start asyncronusly sending messages

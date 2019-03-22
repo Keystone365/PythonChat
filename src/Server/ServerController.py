@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from src.Server.ServerModel import ServerModel
 from src.Server.ServerView import ServerWindow
+from src.Server.ServerReciever import ServerReciever
 #from IOBlocking import sendMessage, recvMessage, recvAll 
 from socket import *
 
@@ -462,16 +463,19 @@ class ServerController():
                 connectionSocket, addr = self.model.SERVER.accept() 
 
                 print("Connected!")
+
+                reciever = ServerReciever(connectionSocket, SERVER_MESSAGE_QUEUE, self)
+                #TODO: Need to add loop to close section to remove recievers
                 
                 # store the connection to the list
-                self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-                self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+                #self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
+                #self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
 
 
-                recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket))
-                recieveThread.daemon = True
-                recieveThread.start()
-                self.model.THREADS.append(recieveThread)
+                #recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self))
+                #recieveThread.daemon = True
+                #recieveThread.start()
+                #self.model.THREADS.append(recieveThread)
                 
             except timeout:
                 pass # not a problem, just loop back
