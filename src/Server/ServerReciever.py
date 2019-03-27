@@ -21,6 +21,7 @@ class ServerReciever():
 		self.OUT_MESSAGE_QUEUE = out_queue
 		self.Controller = controller
 
+
 	def Start(self):
 
 			#print("Loaded previous users")
@@ -34,7 +35,6 @@ class ServerReciever():
 			receivingThread.daemon = True
 			receivingThread.start() # start asyncronusly sending messages
 			self.THREADS.append(receivingThread) # catalog the thread in the master list
-
 
 	def Send_Thread(self):
 

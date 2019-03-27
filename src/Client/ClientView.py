@@ -50,7 +50,11 @@ class ClientWindow(tk.Tk):
 		self.mainloop()
 
 	def close_windows(self):
-		self.destroy()
+		try:
+			self.destroy()
+		except tk.TclError as er:
+			#print("Window already closed")
+			pass
 
 	def show_frame(self, page_name):
 		'''Show a frame for the given page name'''

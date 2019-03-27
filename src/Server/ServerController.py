@@ -48,19 +48,15 @@ class ServerController():
             self.model.bClose = True
             self.model.THREADS_JOIN = True
 
-            # set flag to force threads to end
-            self.model.THREADS_JOIN = True 
-
             logger.info('# - Disconnecting all clients')
             
             # notify all users and close connections
-            for client in self.model.USER_CONNECTIONS: 
+            for reciever in self.model.USER_RECIEVERS: 
                 try:
-                    self.sendMessage(client[0], "SYSTEM: Server closed")
+                    #self.sendMessage(client[0], "SYSTEM: Server closed")
+                    reciever.close()
                 except ConnectionResetError: # client closed program
                     pass
-                finally:
-                    client[0].close() # close connection
                 
             
             logger.info('# Clients successfully disconnected')        
@@ -112,6 +108,40 @@ class ServerController():
                 return True
         #return false if no user match
         return False
+
+    def manageConnections(self):
+
+        '''Function for accepting incoming client socket connections'''
+
+        logger.info("In Accept Thread")
+
+        while not self.model.THREADS_JOIN:
+            try:
+
+                print("Attempting to connect")
+                # block until a connection arrives (timeout 1 second)
+                connectionSocket, addr = self.model.SERVER.accept() 
+
+                print("Connected!")
+
+                reciever = ServerReciever(connectionSocket, SERVER_MESSAGE_QUEUE, self)
+                self.model.USER_RECIEVERS.append(reciever)
+                #TODO: Need to add loop to close section to remove recievers
+                
+                # store the connection to the list
+                #self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
+                #self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
+
+
+                #recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self))
+                #recieveThread.daemon = True
+                #recieveThread.start()
+                #self.model.THREADS.append(recieveThread)
+                
+            except timeout:
+                pass # not a problem, just loop back
+            except Exception as er:
+                raise er
 
     #sends message according to little endian unsigned int using format characters '<I'
 
@@ -449,38 +479,7 @@ class ServerController():
 
     ##################################THREAD FUNCTIONS################################
         
-    def manageConnections(self):
 
-        '''Function for accepting incoming client socket connections'''
-
-        print("In Accept Thread")
-
-        while not self.model.THREADS_JOIN:
-            try:
-
-                print("Attempting to connect")
-                # block until a connection arrives (timeout 1 second)
-                connectionSocket, addr = self.model.SERVER.accept() 
-
-                print("Connected!")
-
-                reciever = ServerReciever(connectionSocket, SERVER_MESSAGE_QUEUE, self)
-                #TODO: Need to add loop to close section to remove recievers
-                
-                # store the connection to the list
-                #self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-                #self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
-
-
-                #recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self))
-                #recieveThread.daemon = True
-                #recieveThread.start()
-                #self.model.THREADS.append(recieveThread)
-                
-            except timeout:
-                pass # not a problem, just loop back
-            except Exception as er:
-                raise er
                 
     def ClientMessageHandler(self):
 

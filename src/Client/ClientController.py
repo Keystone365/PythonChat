@@ -31,6 +31,7 @@ class ClientController():
     
     
 
+
     def __init__(self, *args, **kwargs):
         self.cWindow = ClientWindow(self)
         self.reciever = ClientReciever(self, self.OUT_MESSAGE_QUEUE)

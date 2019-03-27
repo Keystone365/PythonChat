@@ -29,6 +29,9 @@ class ServerModel:
 	#     "DISCONNECTED": connection has been terminated, awaiting cleanup
 	# [3]: username of validated login.  Defaults to "Guest" prior to authentication
 
+	USER_RECIEVERS = [] #For lisiting number of user connections
+	# Each new connection is given a reciever and each reciever is appended to this list
+
 	#list of storing messages
 	SERVER_MESSAGE_QUEUE = queue.Queue()
 
