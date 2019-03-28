@@ -50,11 +50,11 @@ class ServerModel:
 
 
 	#online user list - not related to CSV file
-	onlineUsers = []
+	online_users = []
 
 	#paths for CSV files
-	UserPath = 'data/users.csv'
-	MessagePath = 'data/messages.csv'
+	USER_PATH = 'data/users.csv'
+	MESSAGE_PATH = 'data/messages.csv'
 
 	THREADS_JOIN = False # Boolean flag for ending threads
 
@@ -67,7 +67,56 @@ class ServerModel:
 	SERVER.bind(ADDR)
 	SERVER.settimeout(3) #set time out value
 	SERVER.listen(5)
-	bClose = False
+	b_close = False
 
 	def __init__(self):
 		pass
+
+	def load_info(self):
+		self.load_user_list()
+		logger.info('Loading messages in LoadMessageList function')
+		self.load_queue(self.model.MESSAGE_PATH, self.model.CLIENT_MESSAGE_QUEUE)
+		logger.info("Successfully loaded csv in LoadList function")
+
+    #Check User CSV: returns list of CSV file contents
+	def load_user_list(self):
+
+		'''Load stored list of authenticated users from user.csv '''
+
+		logger.info("In loading user function")
+		file = open(self.model.USER_PATH, "r") # open the authentication file for reading
+		text = file.read().splitlines() # read in all lines of the file
+		file.close() # close the file
+		logger.info("File Open in LoadUserList function")
+
+		for line in text: # itterate through all the lines
+			user_values = line.split(",") # parse out the username and password hash
+			#UserValues.append(0) # number of failed login attempts
+			#UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
+			self.AUTHENTIC_USERS.append(user_values) # store the object for later authentication
+     
+	#returns message list for user        
+	def load_queue(filepath, list_queue):
+
+		'''Load stored unsent messages from messages.csv '''
+
+		# open the authentication file for reading
+		file = open(filepath, "r") 
+		text = file.read().splitlines()
+		file.close()
+
+		# itterate through all the lines
+		for line in text: 
+			message_values = line.split(",") #Get message values
+			list_queue.put(message_values) # store the object for later authentication
+
+		logger.info("Successfully loaded csv in LoadMessageList function")
+
+	#Write CSV: writes user dictionary to users.CSV file and writes over previous information		
+	def save_user_list(self, Name, Pass):
+
+		'''Save known users to CSV file at util/users.csv'''
+
+		file = open(self.USER_PATH, "a") # open authentication file to permanently save account
+		file.write(Name + "," + Pass + "\n") # write the data to file
+		file.close()

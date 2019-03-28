@@ -5,7 +5,6 @@ from tkinter import font  as tkfont
 
 #NOTES: The View is the module whose task is to display data to the user. Might call on model to display data
 
-
 class ServerWindow(tk.Tk):
 
 	def __init__(self, controller, *args, **kwargs):
@@ -67,8 +66,8 @@ class ServerWindow(tk.Tk):
 		messagebox.showerror("Login Warning", "Admin user not found. Incorrect username or password")
 
 
-
 class ServerView(tk.Frame):
+
 	def __init__(self, master, controller):
 		tk.Frame.__init__(self, master, relief=tk.SUNKEN, bd=2)
 		self.master = master
@@ -82,7 +81,6 @@ class ServerView(tk.Frame):
 
 		self.lbl_Reply = tk.Label(self, text="Reply")
 
-
 		#Text Field
 		self.messages = tk.Text(self)
 		self.messages.config(state="disabled")
@@ -94,14 +92,15 @@ class ServerView(tk.Frame):
 		#self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.quitButton.pack(side="right", padx=15)
 
-	def Update_Messages(self, sMessage):
+	def update_messages(self, sMessage):
 		self.messages.config(state="normal")
 		self.messages.insert(tk.END, sMessage)
 		self.messages.config(state="disabled")
 
-	def Reply_Message(self):
+	def reply_message(self):
 		self.controller.Send_Handler(self.ent_reply.get())
 		self.ent_reply.delete(0, "end")
+
 
 class Login(tk.Frame):
 	def __init__(self, master, controller, **kwargs):
@@ -123,7 +122,7 @@ class Login(tk.Frame):
 		self.ent_password.insert(tk.END, "Password")
 
 		#Buttons
-		self.btn_login = tk.Button(self, text = 'Login', command = self.loginButton)
+		self.btn_login = tk.Button(self, text = 'Login', command = self.login_button)
 		self.btn_quit = tk.Button(self, text = 'Quit', command = self.controller.close)
 
 		#set
@@ -143,7 +142,7 @@ class Login(tk.Frame):
 
 		#self.frame.place(x = 20, y = 270, width=120, height=25)
 
-	def loginButton(self):
+	def login_button(self):
 		username = self.ent_username.get()
 		password = self.ent_password.get()
 		self.controller.login_handler(username, password)

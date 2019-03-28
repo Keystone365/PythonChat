@@ -9,11 +9,10 @@ class ServerReciever():
 	THREADS = []
 	#CLIENT.settimeout(10) #set time out value
 
-	recieveBufferSize = 1024
-	sendBufferSize = 1024
+	RECIEVE_BUFFER_SIZE = 1024
 
-	runningStatus = True
-	clientConnect = False
+	running_status = True
+	client_connect = False
 	delay=6 #<- Change to 30. For debug purposes
 
 	def __init__(self, Client, out_queue, Controller):
@@ -22,28 +21,27 @@ class ServerReciever():
 		self.Controller = controller
 
 
-	def Start(self):
+
+	def start(self):
 
 			#print("Loaded previous users")
-			sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
-			sendingThread.daemon = True
-			sendingThread.start() # start accepting connections
-			THREADS.append(sendMessageThread) # catalog the thread in the master list
+			sending_thread = threading.Thread(target = send_thread, args = ()) # generate a thread to accept connections
+			sending_thread.daemon = True
+			sending_thread.start() # start accepting connections
+			THREADS.append(sending_thread) # catalog the thread in the master list
 
 			#print("Accepting new connections")
-			receivingThread = threading.Thread(target = self.Receive_Thread, args = ()) # generate a thread to send all messages
-			receivingThread.daemon = True
-			receivingThread.start() # start asyncronusly sending messages
-			self.THREADS.append(receivingThread) # catalog the thread in the master list
+			receiving_thread = threading.Thread(target = self.receive_thread, args = ()) # generate a thread to send all messages
+			receiving_thread.daemon = True
+			receiving_thread.start() # start asyncronusly sending messages
+			self.THREADS.append(receiving_thread) # catalog the thread in the master list
 
-	def Send_Thread(self):
+	def send_thread(self):
 
 		while(self.runningStatus):
-			self.SendMethod()
+			self.send_method()
 
-
-
-	def SendMethod(self):
+	def send_method(self):
 
 		try:
 
@@ -59,57 +57,56 @@ class ServerReciever():
 			if message is None:
 				pass
 
-			bMessage = message.encode()
+			b_message = message.encode()
 
 			length = len(bMessage)
 
 			CLIENT.sendall(struct.pack('>I', length))
-			CLIENT.sendall(bMessage)
+			CLIENT.sendall(b_message)
         
 		except Exception as er:
 			raise er
 
-	def Receive_Thread(self):
+	def receive_thread(self):
 
-		while(self.runningStatus):
-			self.ReceiveMethod()
+		while(self.running_status):
+			self.receive_method()
 			pass
 
-	def ReceiveMethod(self):
+	def receive_method(self):
 
 		#unexpected looping is occuring
 
 		try:
 
 			# Read message length and unpack it into an integer
-			bMessageLength = self.receiveAll(4)
+			b_message_length = self.receiveAll(4)
 			if bMessageLength is None:
 				#print(bMessageLength)
 				return
 
-			print(str(bMessageLength))
+			print(str(b_message_length))
 
-			intLength = int.from_bytes(bMessageLength, byteorder= 'big')
+			i_length = int.from_bytes(b_message_length, byteorder= 'big')
 
-			print(str(intLength))
+			print(str(i_length))
 			    
-			serverMessage = self.receiveAll(intLength).decode()
+			server_message = self.receive_all(i_length).decode()
 
-			print(str(serverMessage))
+			print(str(server_message))
 			# Read the message data
 			
-			self.controller.Reply_Handler(serverMessage)
+			self.controller.reply_handler(server_message)
 
 			print("Finished Getting First Message")
-			bNo = self.CLIENT.recv(1056)
+			bNo = self.CLIENT.recv(RECIEVE_BUFFER_SIZE)
 			print(bNo)
 
 		except Exception as e:
 			raise e
     
-
 	'''Helper function to recv a number of bytes or return None if EOF is hit'''
-	def receiveAll(self, length):
+	def receive_all(self, length):
 
 
 		#byte sequence
@@ -129,7 +126,7 @@ class ServerReciever():
 		return data
 
 	def close(self):
-		self.runningStatus = False # set flag to force threads to end
+		self.running_status = False # set flag to force threads to end
 
 		for thread in self.THREADS:
 			thread.join()

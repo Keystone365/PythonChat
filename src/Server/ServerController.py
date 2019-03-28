@@ -25,11 +25,10 @@ class ServerController():
 
     def __init__(self):
         logger.info('Initializing controller')
-        self.sWindow = ServerWindow(self)
+        self.window = ServerWindow(self)
         self.model = ServerModel()
-        self.LoadInfo()
 
-    def Run(self):
+    def run(self):
 
         print('PythonChat 2018 Server running')
         print(gethostname())  
@@ -37,14 +36,14 @@ class ServerController():
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
         logger.info("Starting window")
-        self.sWindow.run()
-
+        self.model.load_info()
+        self.window.run()
 
     def close(self):
 
-        if (not self.model.bClose):
+        if (not self.model.b_close):
             logger.info("Closing ServerController")
-            self.sWindow.close_windows()
+            self.window.close_windows()
             self.model.bClose = True
             self.model.THREADS_JOIN = True
 
@@ -72,27 +71,27 @@ class ServerController():
             print('\nPythonChat Server cleanup and exit...done!')
             self.model.SERVER.close()
 
-    def Handler():
+    def handler():
         pass
 
-    def Return_Key_Handler(self, event):
+    def return_key_handler(self, event):
         pass
 
     def login_handler(self, username, password):
 
         if(not self.in_list(username, password, "1")):
             print("not in admin user list")
-            self.sWindow.login_warning()
+            self.window.login_warning()
         else: 
-            self.sWindow.show_frame("ServerView")
+            self.window.show_frame("ServerView")
 
             logger.info("Entering Accept Thread")
 
             #Start Accept Thread
-            manageThread = threading.Thread(target = self.manageConnections, args = ()) 
-            manageThread.daemon = True
-            manageThread.start() 
-            self.model.THREADS.append(manageThread)
+            manage_thread = threading.Thread(target = self.manage_connections, args = ()) 
+            manage_thread.daemon = True
+            manage_thread.start() 
+            self.model.THREADS.append(manage_thread)
 
             '''#Start Accept Thread
             acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
@@ -109,7 +108,7 @@ class ServerController():
         #return false if no user match
         return False
 
-    def manageConnections(self):
+    def manage_connections(self):
 
         '''Function for accepting incoming client socket connections'''
 
@@ -147,7 +146,7 @@ class ServerController():
 
     ###############################SEND#AND#RECIEVE#FUNCTIONS#####################################
 
-    def sendMessage(self, client, message):
+    def send_message(self, client, message):
 
         '''Sends message according to little endian 
         unsigned int using format characters '<I'''
@@ -156,27 +155,25 @@ class ServerController():
         #'>' means little endian, 'I' means unsigned integer
         #CLIENT.send sends entire message as series of send
         
-        bMessage = message.encode()
+        b_message = message.encode()
         
-        length = len(bMessage)
+        length = len(b_message)
 
         client.sendall(struct.pack('>I', length))
-        client.sendall(bMessage)
-        
-    def recvMessage(client):
+        client.sendall(b_message)
+ 
+    def recv_message(client):
 
         # Read message length and unpack it into an integer
-        bMessageLength = recieveAll(client, 4)
+        b_messageLength = recieve_all(client, 4)
         
-        intLength = int.from_bytes(bMessageLength, byteorder= 'big')
+        i_Length = int.from_bytes(bMessageLength, byteorder= 'big')
             
-        serverMessage = recieveAll(client, intLength).decode()
+        server_message = recieve_all(client, intLength).decode()
         # Read the message data
-        return serverMessage
-        
+        return server_message        
 
-
-    def recieveAll(client, length):
+    def recieve_all(client, length):
 
         '''Helper function to recv a number of bytes or return None if EOF is hit'''
 
@@ -198,8 +195,7 @@ class ServerController():
 
     ###############################MESSAGING FUNCTIONS############################################
 
-
-    def SystemCommand(self, message = []):
+    def system_command(self, message = []):
 
         '''Handles system command requests by clients'''
 
@@ -209,7 +205,7 @@ class ServerController():
         # if they wanted an online user list
         if command[0] == "LIST":
         
-            userList = ""
+            user_list = ""
         
             for client in self.model.USER_CONNECTIONS: # find the sending user
                 if message[0] == client[3]:
@@ -217,18 +213,17 @@ class ServerController():
                     # for each online authenticate user create name list
                     for user in USER_CONNECTIONS: 
                         if user[3] != "Guest": # if they have been authenticated
-                            userList += user[3] + "\n" # add their name to the list
+                            user_list += user[3] + "\n" # add their name to the list
 
                
                     
                     
                     # send the list
-                    sendMessage(client[0], "Online Users:" + userList)
+                    send_message(client[0], "Online Users:" + userList)
                     logger.debug(client[3] + ' has been sent online user list')
                     break # stop searching for the sending user
-
-                    
-    def Broadcast(self, message = []):
+            
+    def broadcast(self, message = []):
 
         '''Handles broadcast messages to all users'''
 
@@ -238,7 +233,7 @@ class ServerController():
             
             # in case they went offline by surprise
             try: 
-                sendMessage(user[0], message[0] + ": " + message[2]) # send the message to this user
+                send_message(user[0], message[0] + ": " + message[2]) # send the message to this user
                 
             # if client closed program flag and disconnect
             except ConnectionResetError: 
@@ -247,24 +242,24 @@ class ServerController():
                 pass # no worries, it's just a broadcast
                 
         self.model.SERVER_MESSAGE_QUEUE.put(message[0] + ": " + message[2]) # echo the message to the server terminal
-        
-    def PrivateMessage(self, message = []):
+    
+    def private_message(self, message = []):
 
         '''Handles private messages requests from clients'''
 
         # flag incase the target user is offline
-        userOnline = False 
+        user_online = False 
 
         # if this is a new message, not an offline queued message
         if message[3] == True: 
             for user in self.model.USER_CONNECTIONS: # check for the target user
                 if message[1] == user[3]: # if the user is found
-                    userOnline = True
+                    user_online = True
                     
                     try: # in case they went offline by surprise
                     
                         # send the message to the user
-                        sendMessage(user[0], message[0] + " -> You: " + message[2])
+                        send_message(user[0], message[0] + " -> You: " + message[2])
                         logger.info(message[0] + " -> " + message[1] + ": " + message[2])
                         SERVER_MESSAGE_QUEUE.put(message[0] + " -> " + message[1] + ": " + message[2])
                         
@@ -277,23 +272,23 @@ class ServerController():
                     
                     break #Do not check other users
 
-            if userOnline == False: # if the user wasn't online
+            if user_online == False: # if the user wasn't online
                 for user in USER_CONNECTIONS: # find the messager
                 
                     if message[0] == user[3]: # if this is the messager
-                        sendMessage(user[0], message[1] + " is offline. Message will be delivered when online") # send the message to the user
-                        SERVER_MESSAGE_QUEUE.put("Offline queue: " + message[0] + " -> " + message[1] + ": " + message[2]) # echo the message to the server terminal
+                        send_message(user[0], message[1] + " is offline. Message will be delivered when online") # send the message to the user
+                        self.model.SERVER_MESSAGE_QUEUE.put("Offline queue: " + message[0] + " -> " + message[1] + ": " + message[2]) # echo the message to the server terminal
                         message[3] = False # flag the message as not new; offline queued
-                        CLIENT_MESSAGE_QUEUE.put(message); # return the message to the end of the queue
+                        self.model.CLIENT_MESSAGE_QUEUE.put(message); # return the message to the end of the queue
 
         else: # offline queued message
             for user in USER_CONNECTIONS: # check for the target user
                 if message[1] == user[3]: # if the user is found
-                    userOnline = True
+                    user_online = True
                     # in case they went offline by surprise
                     try: 
 
-                        sendMessage(user[0], "Message sent while you were offline: " 
+                        send_message(user[0], "Message sent while you were offline: " 
                                         + message[0] + " -> You: " 
                                         + message[2])
                                         
@@ -307,108 +302,49 @@ class ServerController():
                         user[2] = "DISCONNECTED" 
                         userOnline = False
 
-            if userOnline == False: # if the user still wasn't online
-                CLIENT_MESSAGE_QUEUE.put(message) # return the message to the end of the queue
+            if user_online == False: # if the user still wasn't online
+                self.model.CLIENT_MESSAGE_QUEUE.put(message) # return the message to the end of the queue
 
-
-
-
-
-    def checkStoredMessages(self, client): 
+    def check_stored_messages(self, client): 
 
         '''Function checks whether stored messages are available, sends stored messages'''
         
         for sender, reciever, message in self.model.STOREDMESSAGES:
             if client[2] == reciever:
-                send(client[2], "FROM " + client[3] + ": " + message)
+                send(client[2], "FROM " + client[3] + ": " + message)                   
                        
-                       
-    def sendLoggedInNotification(self, client):
+    def send_logged_in_notification(self, client):
 
         '''Function sends notification to all online users that the client is online'''
         
         for user in USER_CONNECTIONS:
             message = "USER " + client[1] + " IS ONLINE"
             # queue the message, from this user, to the server
-            SERVER_MESSAGE_QUEUE.put([client[3], "BROADCAST", message, True]) 
+            self.model.SERVER_MESSAGE_QUEUE.put([client[3], "BROADCAST", message, True]) 
                       
              
     #########################CVS LOAD AND SAVE FUNCTIONS##########################################
 
-
-
-    def LoadInfo(self):
-        self.LoadUserList()
-        logger.info('Loading messages in LoadMessageList function')
-        self.LoadQueue(self.model.MessagePath, self.model.CLIENT_MESSAGE_QUEUE)
-        logger.info("Successfully loaded csv in LoadList function")
-
-    #Check User CSV: returns list of CSV file contents
-    def LoadUserList(self):
-
-        '''Load stored list of authenticated users from user.csv '''
-
-        logger.info("In loading user function")
-        file = open(self.model.UserPath, "r") # open the authentication file for reading
-        text = file.read().splitlines() # read in all lines of the file
-        file.close() # close the file
-        logger.info("File Open in LoadUserList function")
-
-        for line in text: # itterate through all the lines
-            UserValues = line.split(",") # parse out the username and password hash
-            #UserValues.append(0) # number of failed login attempts
-            #UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
-            self.model.AUTHENTIC_USERS.append(UserValues) # store the object for later authentication
-
-          
-          
-    #returns message list for user        
-    def LoadQueue(self, filepath, listQueue):
-
-        '''Load stored unsent messages from messages.csv '''
-        
-        # open the authentication file for reading
-        file = open(filepath, "r") 
-        text = file.read().splitlines()
-        file.close()
-
-        # itterate through all the lines
-        for line in text: 
-            MessageValues = line.split(",") #Get message values
-            listQueue.put(MessageValues) # store the object for later authentication
-        
-        logger.info("Successfully loaded csv in LoadMessageList function")
-
-
-    #Write CSV: writes user dictionary to users.CSV file and writes over previous information		
-    def SaveUserList(self, Name, Pass):
-
-        '''Save known users to CSV file at util/users.csv'''
-        
-        file = open(self.model.UserPath, "a") # open authentication file to permanently save account
-        file.write(Name + "," + Pass + "\n") # write the data to file
-        file.close()
-       
-        
+           
     #*************AUTHENICATE FUNCTIONS**************
         
 
-    def NewUserAuth(self, client, username, passhash):
+    def new_user_auth(self, client, username, passhash):
 
         '''New user creation and authentication function'''
 
-        usernameExists = False # set flag
+        username_exists = False # set flag
 
         for account in self.model.AUTHENTIC_USERS: 
             if account[0] == username: # if username already exists
-                usernameExists = True # set flag
+                username_exists = True # set flag
                 break # no sense continuing to search
                
-        if usernameExists == False: # unused name, create
+        if username_exists == False: # unused name, create
         
             AUTHENTIC_USERS.append([username, passhash, 0, time.time()]) # create account in list
             
-            SaveUserList(username, passhash)
+            save_user_list(username, passhash)
             
             
             client[2] = "VERIFIED" # flag the connection as verified
@@ -416,7 +352,7 @@ class ServerController():
             
             SERVER_MESSAGE_QUEUE.put("CREATED," + username) # debug
             
-            sendMessage(client[0], str("CREATED," + username)) # report account created to client
+            send_message(client[0], str("CREATED," + username)) # report account created to client
             CLIENT_MESSAGE_QUEUE.put(["SYSTEM", "BROADCAST", client[3] + " joined the server", True]) # queue a broadcast that the new user joined
         
         else: # username already exists
@@ -425,9 +361,8 @@ class ServerController():
             client[0].send(("TAKEN," + username).encode()) # report that the account already exists to the client
             client[0].close() # disconnect client
             client[2] = "DISCONNECTED" # flag connection for cleanup
-                
-                
-    def OldUserAuth(self, client, username, passhash):
+                            
+    def old_user_auth(self, client, username, passhash):
 
         '''Returning User authentication function'''
 
@@ -469,19 +404,11 @@ class ServerController():
                 client[2] = "DISCONNECTED" # flag connection for cleanup
                 
                 break # stop itterating when the right username has been found'''
-                
-         
-
-                    
-
-        
-        
+                 
 
     ##################################THREAD FUNCTIONS################################
-        
-
-                
-    def ClientMessageHandler(self):
+            
+    def client_message_handler(self):
 
         '''Function for handling send message request'''
         
@@ -495,16 +422,16 @@ class ServerController():
              
                 #IF SYSTEM COMMAND
                 if message[0] == "SYSTEM": # if this is a command
-                    SystemCommand(message)
+                    system_command(message)
                          
                 #IF BROADCAST MESSAGE
                 elif message[0] == "BROADCAST":
-                    Broadcast(message)
+                    broadcast(message)
                 
              
                 #IF PRIVATE MESSAGE
                 else: # private message
-                    PrivateMessage(message)
+                    private_message(message)
                 
              
                 CLIENT_MESSAGE_QUEUE.task_done() # report the gotten message as handled
@@ -516,9 +443,7 @@ class ServerController():
             except Exception as er:
                 logger.debug('Error occured in while sending message')
                 raise er
-
-                
-                
+             
     def printUserList(self):
 
         '''Print list of online users every 10 seconds'''
@@ -530,38 +455,37 @@ class ServerController():
                 #print time
                 ts = time.gmtime()
                 timest = time.strftime("%Y-%m-%d %H:%M:%S", ts)
-                listOfConnections = "Update " + timest + " -- "
+                list_of_Connections = "Update " + timest + " -- "
 
                 #print users
                 if not USER_CONNECTIONS:
-                    listOfConnections += "0 Users Online"
+                    list_of_Connections += "0 Users Online"
                 else:
-                    listOfConnections += str(len(USER_CONNECTIONS)) + " Online User(s):"
+                    list_of_connections += str(len(USER_CONNECTIONS)) + " Online User(s):"
                     for user in USER_CONNECTIONS: # for all online users
                         username = ''
                         if username == 'Guest':
                             username = str(user[1])
                         else:
                             username = 'NAME:' + str(user[3]) + ', IP:' + str(user[1][0]) + ', PORT:' + str(user[1][1])
-                        listOfConnections = listOfConnections + "\n~ " + username # add their name to the list
+                        list_of_Connections = listOfConnections + "\n~ " + username # add their name to the list
                     
                 SERVER_MESSAGE_QUEUE.put(listOfConnections)
             except timeout:
                 pass
-                
-                
+                            
     #authenticates and creates threads
-    def Authenticate(self, client):
+    def authenticate(self, client):
 
         '''Authenticate client connections for returning or new users'''
         
         logger.info('# Now in Authenticate function')
         
-        usernameExists = False # flag to be set if the desired username already is taken
+        b_username_exists = False # flag to be set if the desired username already is taken
 
         try: 
 
-            data = recvMessage(client[0]) # get authetication data from client
+            data = recv_message(client[0]) # get authetication data from client
             if data == "": # if the message is blank
                 logger.debug('Empty String recieved from client')
                 raise ConnectionResetError # assume client closed
@@ -583,19 +507,17 @@ class ServerController():
         except ConnectionResetError: # client closed program
             client[0].close() # disconnect client
             SERVER_MESSAGE_QUEUE.put("Disconnect: " + client[1][0] + ":" + str(client[1][1]))
-            client[2] = "DISCONNECTED" # flag connection for cleanup
+            client[2] = "DISCONNECTED" # flag connection for cleanup       
             
-            
-            
-    def receiveMessages(self, client):
+    def receive_messages(self, client):
 
         '''Thread function for recieving messages from a client.'''
 
         logger.info('# RecieveMessages thread running') 
         #self.model.SERVER_MESSAGE_QUEUE.put("Starting to receive messages from " + client[3])
-        ClientDisconnect = False
+        client_disconnect = False
        
-        while not self.model.THREADS_JOIN and not ClientDisconnect:
+        while not self.model.THREADS_JOIN and not client_disconnect:
             try:
              
                 data = recvMessage(client)
@@ -645,9 +567,7 @@ class ServerController():
                 #client[0].close()
                 #client[2] = "DISCONNECTED"
                 print("ConnectionResetError occured.")
-                ClientDisconnect = True
-
-             
+                client_disconnect = True        
              
     #################################MAIN##############################################         
 

@@ -1,6 +1,18 @@
 
+'''
+PEP: 8
+Title: Pythonchat Server
+Author: Andrew Christianson
+Status: Active
+Type: Process
+Created: March 20, 2019
+Post-History:
+'''
+
+
 from src.Server.ServerController import ServerController;
 import util.utility as ut
+
 
 if __name__ == '__main__':
     #ut.cls()
@@ -8,7 +20,7 @@ if __name__ == '__main__':
     s = ServerController()
 
     try:
-        s.Run()
+        s.run()
     
     except KeyboardInterrupt:
     
