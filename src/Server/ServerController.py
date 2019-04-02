@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
-from util.utility import *
-import csv
+
+#import csv
 import threading
 import sys
 import struct
 import time
 import logging
+
 from datetime import datetime
+from util.utility import *
+from socket import *
+
 from src.Server.ServerModel import ServerModel
 from src.Server.ServerView import ServerWindow
 from src.Server.ServerReciever import ServerReciever
 #from IOBlocking import sendMessage, recvMessage, recvAll 
-from socket import *
 
 
 LOG_FORMAT = "%(levelname)s (%(asctime)s): [%(processName)s] - %(message)s"
 logging.basicConfig(filename = "data/ServerChatLog.log",
-                    level = logging.DEBUG,
-                    format = LOG_FORMAT,
-                    filemode = 'w')
+                        level = logging.DEBUG,
+                        format = LOG_FORMAT,
+                        filemode = 'w')
 logger = logging.getLogger() #root logger
 
 class ServerController():
@@ -29,13 +32,10 @@ class ServerController():
         self.model = ServerModel()
 
     def run(self):
-
         print('PythonChat 2018 Server running')
         print(gethostname())  
         print('Listening on port: ' + str(self.model.PORT))
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
-
-        logger.info("Starting window")
         self.model.load_info()
         self.window.run()
 
@@ -44,30 +44,23 @@ class ServerController():
         if (not self.model.b_close):
             logger.info("Closing ServerController")
             self.window.close_windows()
-            self.model.bClose = True
+            self.model.b_close = True
             self.model.THREADS_JOIN = True
 
             logger.info('# - Disconnecting all clients')
-            
-            # notify all users and close connections
             for reciever in self.model.USER_RECIEVERS: 
                 try:
                     #self.sendMessage(client[0], "SYSTEM: Server closed")
                     reciever.close()
                 except ConnectionResetError: # client closed program
                     pass
-                
-            
-            logger.info('# Clients successfully disconnected')        
-            
+                    
+            logger.info('# - Closing all Threads')        
             for thread in self.model.THREADS:
                 logger.info('Thread Ending:' + str(thread))
                 thread.join()
                 self.model.THREADS.remove(thread)
-            
-            logger.info('# All threads ended') 
 
-            #ut.cls()
             print('\nPythonChat Server cleanup and exit...done!')
             self.model.SERVER.close()
 
@@ -113,7 +106,6 @@ class ServerController():
         '''Function for accepting incoming client socket connections'''
 
         logger.info("In Accept Thread")
-
         while not self.model.THREADS_JOIN:
             try:
 
@@ -123,7 +115,7 @@ class ServerController():
 
                 print("Connected!")
 
-                reciever = ServerReciever(connectionSocket, SERVER_MESSAGE_QUEUE, self)
+                reciever = ServerReciever(connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self)
                 self.model.USER_RECIEVERS.append(reciever)
                 #TODO: Need to add loop to close section to remove recievers
                 

@@ -1,17 +1,16 @@
-import tkinter as tk # python 3
+
 import queue
 import threading
 import logging
+import tkinter as tk # python 3
 
 from socket import *
 from datetime import datetime
+from util.utility import *
 
 from src.Client.ClientModel import ClientModel
 from src.Client.ClientView import ClientWindow
 from src.Client.ClientReciever import ClientReciever
-from util.utility import *
-
-#from Handlers import *
 
 #NOTE: Controller should handle I/O logic
 
@@ -23,133 +22,68 @@ logging.basicConfig(filename = "data/ClientChatLog.log",
                     filemode = 'w')
 logger = logging.getLogger() #root logger
 
+
 class ClientController():
 
     OUT_MESSAGE_QUEUE = queue.Queue()
-    model = ClientModel()
-    bClose = False
-    
-    
-
+    clientmodel = ClientModel()
+    b_close = False
 
     def __init__(self, *args, **kwargs):
-        self.cWindow = ClientWindow(self)
+        self.c_window = ClientWindow(self)
         self.reciever = ClientReciever(self, self.OUT_MESSAGE_QUEUE)
 
     def run(self):
-        self.cWindow.run()
-
-
-    def Connect(self):
-        try:
-            bStart = self.reciever.Start("127.0.0.1", 5006)
-            return bStart
-
-        except Error as er:
-            print("Exception occured with connect")
-            raise er  
-
+        self.c_window.run()
 
     def login_handler(self, server, port, username):
-        
-        #set model info
-        self.model.SetLogin(server, port, username)
 
+        b_start = self.reciever.start(server, port)
 
-
-        bStart = self.Connect()
-
-
-
-        if(bStart):
-            self.cWindow.show_frame("ClientView")
-            #self.reciever.Start(server, port)
-
-        #change frame
-        self.PrintMessage()
-        
-
+        if(b_start):
+            #set clientmodel info
+            self.clientmodel.set_login(server, port, username)
+            self.c_window.show_frame("ClientView")
+            self.printmessage()
+        else:
+            self.c_window.error_box("Connection Error", "Connection failed. Please try again.")
         pass
 
-    def Reply_Handler(self, reply):
-        frame = self.cWindow.current_frame()
-        frame.Update_Messages("\n" + reply)
+    def reply_handler(self, reply):
+        frame = self.c_window.current_frame()
+        frame.update_messages("\n" + reply)
         pass
 
-    def Send_Handler(self, message):
-        frame = self.cWindow.current_frame()
-        sMessage = "\n" + self.model.username + ":" + message
-        frame.Update_Messages(sMessage)
+    def send_handler(self, message):
+        frame = self.c_window.current_frame()
+        s_message = "\n" + self.clientmodel.username + ":" + message
+        frame.update_messages(s_message)
         pass
-
 
     #Return key press handler
-    def Return_Key_Handler(self, event):
-        frame = self.cWindow.current_frame()
-        frame.Reply_Message()
+    def return_key_handler(self, event):
+        frame = self.c_window.current_frame()
+        frame.reply_message()
         pass
 
-    def PrintMessage(self):
-        self.Reply_Handler('PythonChat 2019 Client running')
-        self.Reply_Handler('Host IP: ' + self.model.clientIP)    
-        self.Reply_Handler('Server IP: ' + self.model.serverIP)  
-        self.Reply_Handler('Listening on port: ' + str(self.model.clientPort))
-        self.Reply_Handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        self.Reply_Handler("Establishing connection....")
+    def printmessage(self):
+        self.reply_handler('PythonChat 2019 Client running')
+        self.reply_handler('Host IP: ' + self.clientmodel.clientIP)    
+        self.reply_handler('Server IP: ' + self.clientmodel.serverIP)  
+        self.reply_handler('Listening on port: ' + str(self.clientmodel.clientPort))
+        self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.reply_handler("Establishing connection....")
 
-    def GetServerPort(self):
-        return self.model.serverPort
+    def get_server_port(self):
+        return self.clientmodel.server_port
 
-    def GetServerIP(self):
-        return self.model.serverIP
+    def get_server_ip(self):
+        return self.clientmodel.server_ip
 
     def close(self):
-        if (not self.bClose):
+        if (not self.b_close):
             logger.info("Closing Client ClientController")
             self.reciever.close()
-            self.cWindow.close_windows()
-            self.bClose = True
+            self.c_window.close_windows()
+            self.b_close = True
             print('\nPythonChat Client cleanup and exit...done!')
-
-
-
-
-
-
-        '''try:
-        logger.info("# Entering Main")
-        #Main()
-        
-        logger.info("# Exiting Main")
-        pass
-    except Exception as ex:
-        #ut.cls()
-        logger.debug("Exception occured" + ex)
-        print("Exception occured" + ex)
-        #exit(-1)  # return -1 for error during execution
-        pass
-    except KeyboardInterrupt:
-        logger.info("Keyboard interupt occured. Starting shutdown process")
-        print("\nCTRL-C: Program shutting down")
-    
-        pass
-    finally:
-        #ut.cls()
-        
-        THREADS_JOIN = True # set flag to force threads to end
-        
-        for thread in THREADS:
-            thread.join()
-            THREADS.remove(thread)
-        
-        print(' - All threads ended')
-        logger.info("All threads ended")
-        
-        CLIENT.close()
-        print('\nPythonChat Client cleanup and exit...done!')
-        
-        logger.info("Closing program")
-        exit(0)  # return 0 for successful completion'''
-
-
-

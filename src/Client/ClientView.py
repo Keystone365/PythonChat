@@ -3,11 +3,18 @@ from tkinter import messagebox
 from tkinter import font  as tkfont
 
 
-#NOTES: The View is the module whose task is to display data to the user. Might call on model to display data
+'''
+NOTES: 
+The View is the module whose task is to display 
+data to the user. Might call on model to display data.
+The view should never call it's own methods. The view can be 
+any type of output representation, be it HTML, GUI,
+or text.
+
+
+'''
 
 class ClientWindow(tk.Tk):
-
-	
 
 	def __init__(self, controller, *args, **kwargs):
 		tk.Tk.__init__(self, *args, **kwargs)
@@ -15,12 +22,12 @@ class ClientWindow(tk.Tk):
 		self.CONTROLLER = controller
 
 		#list of frames
-		FrameTouple = (Login, ClientView)
+		frame_touple = (Login, ClientView)
 
 		#basic font
 		self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
-		self.bind('<Return>', self.CONTROLLER.Return_Key_Handler)
+		self.bind('<Return>', self.CONTROLLER.return_key_handler)
 
 		# the container is where we'll stack a bunch of frames
 		# on top of each other, then the one we want visible
@@ -31,7 +38,7 @@ class ClientWindow(tk.Tk):
 		container.grid_columnconfigure(0, weight=1)
 
 		self.frames = {}
-		for F in FrameTouple: #login
+		for F in frame_touple: #login
 			page_name = F.__name__
 			print(str(page_name))
 			frame = F(container, self.CONTROLLER)
@@ -60,11 +67,14 @@ class ClientWindow(tk.Tk):
 		'''Show a frame for the given page name'''
 		frame = self.frames[page_name]
 		frame.tkraise()
-		self.currentFrame = frame
+		self.current_frame = frame
 
 	def current_frame(self):
-		return self.currentFrame
+		return self.current_frame
 
+	def error_box(self, title, message):
+		"""Functions creates error message window."""
+		messagebox.showerror(title, message)
 
 
 class ClientView(tk.Frame):
@@ -73,33 +83,32 @@ class ClientView(tk.Frame):
 		self.master = master
 		self.controller = controller
 
-		#Buttons, Lables, Entries
-		self.quitButton = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
-		self.sendButton = tk.Button(self, text= "Send", width = 20, command = self.Reply_Message)
+		#Buttons
+		self.btn_quit = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
+		self.btn_send = tk.Button(self, text= "Send", width = 20, command = self.reply_message)
+		#Entries
 		self.ent_reply = tk.Entry(self, width = 40)
 		self.ent_reply.bind("<Return>", (lambda event: self.Reply_Message))
-
+		#Label
 		self.lbl_Reply = tk.Label(self, text="Reply")
-
-
 		#Text Field
-		self.messages = tk.Text(self)
-		self.messages.config(state="disabled")
-		self.messages.pack(pady=10,padx=10)
+		self.txt_messages = tk.Text(self)
+		self.txt_messages.config(state="disabled")
+		self.txt_messages.pack(pady=10,padx=10)
 
 		#Pack
 		self.lbl_Reply.pack(side="left", padx=15, pady=8)
 		self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
-		self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
-		self.quitButton.pack(side="right", padx=15)
+		self.btn_send.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
+		self.btn_quit.pack(side="right", padx=15)
 
-	def Update_Messages(self, sMessage):
-		self.messages.config(state="normal")
-		self.messages.insert(tk.END, sMessage)
-		self.messages.config(state="disabled")
+	def update_txt_Messages(self, s_message):
+		self.txt_messages.config(state="normal")
+		self.txt_messages.insert(tk.END, s_message)
+		self.txt_messages.config(state="disabled")
 
-	def Reply_Message(self):
-		self.controller.Send_Handler(self.ent_reply.get())
+	def reply_message(self):
+		self.controller.send_handler(self.ent_reply.get())
 		self.ent_reply.delete(0, "end")
 
 class Login(tk.Frame):
@@ -107,54 +116,38 @@ class Login(tk.Frame):
 		tk.Frame.__init__(self, master, relief=tk.SUNKEN, bd=2, borderwidth="20")
 		self.master = master
 		self.controller = controller
-		#root.resizable(False, False)
-		#self.frame = Frame(self.root)
 
 		#Entry widgets
 		self.ent_server = tk.Entry(self)
-		self.ent_server.insert(tk.END, self.controller.GetServerIP())
+		self.ent_server.insert(tk.END, self.controller.get_server_ip())
 		self.ent_port = tk.Entry(self)
-		self.ent_port.insert(tk.END, str(self.controller.GetServerPort()))
+		self.ent_port.insert(tk.END, str(self.controller.get_server_port()))
 		self.ent_username = tk.Entry(self)
 		self.ent_username.insert(tk.END, "Anonymous")
 
 		#Buttons
-		self.btn_login = tk.Button(self, text = 'Login', command = self.loginButton)
+		self.btn_login = tk.Button(self, text = 'Login', command = self.login_button)
 		self.btn_quit = tk.Button(self, text = 'Quit', command = self.controller.close)
 
-		#set
-
 		#Labels
-		self.lbl_Server = tk.Label(self, text="Server")
-		self.lbl_Port = tk.Label(self, text="Port")
-		self.lbl_Username = tk.Label(self, text="Username")
+		self.lbl_server = tk.Label(self, text="Server")
+		self.lbl_port = tk.Label(self, text="Port")
+		self.lbl_username = tk.Label(self, text="Username")
 
-
-
-		self.lbl_Server.pack(expand=True, fill='both', side="top")
+		#Pack entry widgets, buttons, labels
+		self.lbl_server.pack(expand=True, fill='both', side="top")
 		self.ent_server.pack(expand=False, fill='y')
-		self.lbl_Port.pack(expand=True, fill='both')
+		self.lbl_port.pack(expand=True, fill='both')
 		self.ent_port.pack(expand=False, fill='y')
-		self.lbl_Username.pack(expand=True, fill='both')
+		self.lbl_username.pack(expand=True, fill='both')
 		self.ent_username.pack(expand=False, fill='y')
 		self.btn_login.pack(expand=False, fill='y', pady= 30)
 		self.btn_quit.pack(expand=False, fill='y', pady= 20)
 
 		#self.frame.place(x = 20, y = 270, width=120, height=25)
 
-	def loginButton(self):
+	def login_button(self):
 		server = self.ent_server.get()
 		port = int(self.ent_port.get())
 		username = self.ent_username.get()
 		self.controller.login_handler(server, port, username)
-
-
-class LoginFrame(tk.Frame):
-
-	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
-		self.controller = controller
-		label = tk.Label(self, text="This is the login page", font=controller.title_font)
-		label.pack(side="top", fill="x", pady=10)
-
-		button1 = tk.Button(self, command=lambda: controller.show_frame("Page One"))

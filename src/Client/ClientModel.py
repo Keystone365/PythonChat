@@ -18,12 +18,12 @@ from util.utility import *
 class ClientModel:
 
 	def __init__(self):
-		self.clientIP = "localhost"
-		self.serverIP = '120.000.1.1'
-		self.clientPort = 8192
-		self.serverPort = 8192
+		self.client_ip = "localhost"
+		self.server_ip = "127.0.0.1"
+		self.client_port = 8192
+		self.server_port = 5006
 		self.username = "Anonymous"
-		self.BUFSIZ = 1024
+		self.BUFSIZE = 1024
 		self.CLIENT = socket(AF_INET, SOCK_STREAM)
 		self.CLIENT.settimeout(10) #set time out value
 		self.CHAT_TAG =  True
@@ -32,25 +32,18 @@ class ClientModel:
 		self.CLIENT_MESSAGE_QUEUE = queue.Queue()
 		self.USERNAME = []
 
-	def SetLogin(self, Server, Port, Username):
+	def set_login(self, Server, Port, Username):
 		self.server = Server
 		self.port = Port
 		self.username = Username
 		print(self.server + ", " + str(self.port) + ", " + self.username)
 
 
-#messages sent 
-
-
-
-
-
-
 ###################################################################
 ##########                  SystemList                  ###########
 ###################################################################
 
-def SysList():
+def sys_list():
 
     '''SysList function for system messages to server'''
 
@@ -58,12 +51,10 @@ def SysList():
     CLIENT.send(message.encode())
 
     # Waiting to receive the list from the server
-    recvThread = ReceiveMsgThread(1, 'userList')
+    recvThread = receive_msg_thread(1, 'userList')
     recvThread.start()
 
-
-
-def sendMessage(message):
+def send_message(message):
 
     logger.debug('In sendMessageFunction')
     
@@ -76,38 +67,38 @@ def sendMessage(message):
         #'>' means little endian, 'I' means unsigned integer
         #CLIENT.send sends entire message as series of send
 
-        bMessage = message.encode()
+        b_message = message.encode()
 
-        length = len(bMessage)
+        length = len(b_message)
 
         CLIENT.sendall(struct.pack('>I', length))
-        CLIENT.sendall(bMessage)
+        CLIENT.sendall(b_message)
         
     except Exception as er:
         logger.warning('Exception in sendMessage function')
         logger.warning(er)
         raise er
     
-def recvMessage():
+def recv_message():
 
     logger.debug('In recvMessage Function')
     
     try:
 
         # Read message length and unpack it into an integer
-        bMessageLength = recieveAll(4)
+        b_messagelength = recieve_all(4)
         
-        print(str(bMessageLength))
+        print(str(b_messagelength))
         
-        intLength = int.from_bytes(bMessageLength, byteorder= 'big')
+        i_length = int.from_bytes(b_messagelength, byteorder= 'big')
         
-        print(str(intLength))
+        print(str(i_length))
             
-        serverMessage = recieveAll(intLength).decode()
+        server_message = recieveAll(i_length).decode()
         
-        print(str(serverMessage))
+        print(str(server_message))
         # Read the message data
-        return serverMessage
+        return server_message
     
     except Exception as e:
         s = str(e)
@@ -118,7 +109,7 @@ def recvMessage():
     
 
 
-def recieveAll(length):
+def recieve_all(length):
 
     logger.debug('In recieve all function')
 
@@ -141,14 +132,14 @@ def recieveAll(length):
     return data
     
 #validates user names for messages
-def DestinationValidation(command):
+def destination_validation(command):
 
     #variables
     message = ''
-    chatWith = ''
+    chatwith = ''
 
     #get name of user to chat with
-    chatWith = input(
+    chatwith = input(
       
          "Please enter username"\
          "or the word \"all\" for everyone, or <username>|<username>"\
@@ -156,12 +147,12 @@ def DestinationValidation(command):
      )
     
     #combine username with
-    message = chatWith + ',' + userName[0] + ':' + command
+    message = chatwith + ',' + userName[0] + ':' + command
 
-    sendMessage(message)
+    send_message(message)
     
     #Get validation from server
-    ErrorHandler(recvMessage(), 'DestinationValidation')
+    error_handler(recvmessage(), 'DestinationValidation')
     
     
     
@@ -170,26 +161,26 @@ def DestinationValidation(command):
 ###################################################################
 
 #prints messages sent from server, ends loop when special message sent            
-def GetMessages():
+def get_messages():
 
-    bFlag = True
+    b_flag = True
     
-    while bFlag:
+    while b_flag:
 
-        message = recvMessage()
+        message = recv_message()
         
-        if (message == 'EOF'): bFlag = False
+        if (message == 'EOF'): b_flag = False
         else: print(message)
     
 #validates user names for messages
-def DestinationValidation(command):
+def destination_validation(command):
 
     #variables
-    message = ''
-    chatWith = ''
+    s_message = ''
+    s_chatWith = ''
 
     #get name of user to chat with
-    chatWith = input(
+    s_chatWith = input(
      """\ 
          Please enter <username> (where <username> is the username of the person you want to send a message to),
          or the word <all> for everyone, or <username>|<username> for multiple people you want to chat with\
@@ -198,46 +189,46 @@ def DestinationValidation(command):
     #combine username with
     message = chatWith + ',' + userName[0] + ':' + command
 
-    sendMessage(message)
+    send_message(message)
     
     #Get validation from server
-    ErrorHandler(recvMessage(), 'DestinationValidation')
+    error_handler(recv_message(), 'DestinationValidation')
     
     
 ###################################################################
 ##########                  SystemList                  ###########
 ###################################################################
 
-def SysList():
+def sys_list():
 
     '''System '''
 
-    message = 'SYSTEM,LIST'
-    CLIENT.send(message.encode())
+    s_message = 'SYSTEM,LIST'
+    CLIENT.send(s_message.encode())
 
     # Waiting to receive the list from the server
-    recvThread = ReceiveMsgThread(1, 'userList')
-    recvThread.start()
+    recv_thread = receive_msg_thread(1, 'userList')
+    recv_thread.start()
     
 ########################USER AUTHENTICATE FUNCTIONS################################## 
 
-def ReturningUser(userName):
+def returning_user(userName):
     
     try:
     
-        nameStatus = False
+        b_name_status = False
         
-        while (not nameStatus):
+        while (not b_name_status):
         
             # Asking for the user's credentials
-            password = userName + getpass.getpass("Password: ")
+            password = username + getpass.getpass("Password: ")
 
             # Assumes the default UTF-8
             hash_object = hashlib.sha256(password.encode()) # hashing the password username and salt
             hash1 = hash_object.hexdigest()  # printing the hashed password and username
 
             # Sending user's sign in credentials to the server
-            cred = 'LOGIN,' + userName + ',' + hash1
+            cred = 'LOGIN,' + user_name + ',' + hash1
             sendMessage(cred)
 
             # Correct username and password
@@ -422,9 +413,9 @@ def messageHandler():
     
     '''Handle commands for logged in customers'''
 
-    EXIT = False
+    b_exit = False
 
-    while not EXIT:
+    while not b_exit:
         ut.cls()
         
         #print('What would you like to do?')
@@ -435,9 +426,9 @@ def messageHandler():
         
         
         try:
-            userStatus = userChoice = int(input('Answer: '))
+            userstatus = user_choice = int(input('Answer: '))
             
-            if (userStatus < 0) or (userStatus > 4):
+            if (userstatus < 0) or (userstatus > 4):
                 raise ValueError   
             else:
                 
@@ -464,17 +455,7 @@ def messageHandler():
     
 #######################################MAIN###############################################3
     
-def Main():
-
-
-    
-
-    
-    
-    
-
-            
-            
+def Main():    
     
     #logger.info('In Authenticate method')
     
@@ -484,17 +465,17 @@ def Main():
     #logger.info('Out of Authenticate Method')
     
     #print("Loaded previous users")
-    sendMessageThread = threading.Thread(target = Chat, args = ()) # generate a thread to accept connections
-    sendMessageThread.daemon = True
-    sendMessageThread.start() # start accepting connections
-    THREADS.append(sendMessageThread) # catalog the thread in the master list
+    send_message_thread = threading.Thread(target = Chat, args = ()) # generate a thread to accept connections
+    send_message_thread.daemon = True
+    send_message_thread.start() # start accepting connections
+    THREADS.append(send_message_thread) # catalog the thread in the master list
     logger.info('Send message thread 1 running')
     
     #print("Accepting new connections")
-    readMessageThread = threading.Thread(target = receive, args = ()) # generate a thread to send all messages
-    readMessageThread.daemon = True
-    readMessageThread.start() # start asyncronusly sending messages
-    THREADS.append(readMessageThread) # catalog the thread in the master list
+    read_message_thread = threading.Thread(target = receive, args = ()) # generate a thread to send all messages
+    read_message_thread.daemon = True
+    read_message_thread.start() # start asyncronusly sending messages
+    THREADS.append(read_message_thread) # catalog the thread in the master list
     logger.info('Recieve message thread 2 running')
 
 

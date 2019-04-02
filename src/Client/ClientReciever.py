@@ -9,37 +9,35 @@ class ClientReciever():
 
 	THREADS = []
 	
-
 	#client socket setup
 	CLIENT = socket(AF_INET, SOCK_STREAM)
 	#CLIENT.settimeout(10) #set time out value
 
-	recieveBufferSize = 1024
-	sendBufferSize = 1024
+	i_RECIEVE_BUFFER_SIZE = 1024
+	i_SEND_BUFFER_SIZE = 1024
 
-	runningStatus = True
-	clientConnect = False
-	delay=6 #<- Change to 30. For debug purposes
+	b_running_status = True
+	b_client_connect = False
+	i_CONNECT_DELAY=6 
 
 	def __init__(self, Controller, out_queue):
 		self.controller = Controller
 		self.OUT_MESSAGE_QUEUE = out_queue
 
-	def Start(self, server, port):
+	def start(self, server, port):
 		self.HOST = server
 		self.PORT = port
 		self.ADDR = (self.HOST, self.PORT)
 
-
 		#try to connect to server
-		closeAttempt= time.time() + 30
+		i_close_time= time.time() + self.i_CONNECT_DELAY
 
-		while ((not self.clientConnect) and (time.time() < closeAttempt)):
+		while ((not self.b_client_connect) and (time.time() < i_close_time)):
 			try:
 				print('Atempting to Connect...')
 				self.CLIENT.connect(self.ADDR)
 				#self.CLIENT.setblocking(0)
-				self.clientConnect = True
+				self.b_client_connect = True
 
 			except ConnectionRefusedError:
 				pass
@@ -47,119 +45,112 @@ class ClientReciever():
 				print('Error thrown while connecting:')
 				raise er
 
-		if self.clientConnect == False:
+		if (self.b_client_connect == False):
 			print('Connection with server failed. Please try again at a different time.')
-			return -1
+			return self.b_client_connect
 		else:
 			print('Connected to server.')
 
 			#print("Loaded previous users")
-			'''sendingThread = threading.Thread(target = Send_Thread, args = ()) # generate a thread to accept connections
+			'''sendingThread = threading.Thread(target = send_thread, args = ()) # generate a thread to accept connections
 			sendingThread.daemon = True
 			sendingThread.start() # start accepting connections
 			THREADS.append(sendMessageThread) # catalog the thread in the master list
 
 			'''#print("Accepting new connections")
-			receivingThread = threading.Thread(target = self.Receive_Thread, args = ()) # generate a thread to send all messages
-			receivingThread.daemon = True
-			receivingThread.start() # start asyncronusly sending messages
-			self.THREADS.append(receivingThread) # catalog the thread in the master list
+			receiving_thread = threading.Thread(target = self.receive_thread, args = ()) # generate a thread to send all messages
+			receiving_thread.daemon = True
+			receiving_thread.start() # start asyncronusly sending messages
+			self.THREADS.append(receiving_thread) # catalog the thread in the master list
 
+			return self.b_client_connect
 
-	def Send_Thread(self):
+	def send_thread(self):
 
-		while(self.runningStatus):
-			self.SendMethod()
-
-
+		while(self.b_running_status):
+			self.send_method()
 
 	def SendMethod(self):
 
+		'''
+		Sends message according to little endian 
+		unsigned int using format characters '<I
+
+		Prefix each message with a 4-byte length (network byte order)
+		'>' means little endian, 'I' means unsigned integer
+		CLIENT.send sends entire message as series of send commands. '''
+
 		try:
 
-			'''Sends message according to little endian 
-			unsigned int using format characters '<I'''
+			s_message = self.OUT_MESSAGE_QUEUE.get()
 
-			# Prefix each message with a 4-byte length (network byte order)
-			#'>' means little endian, 'I' means unsigned integer
-			#CLIENT.send sends entire message as series of send
-
-			message = self.OUT_MESSAGE_QUEUE.get()
-
-			if message is None:
+			if s_message is None:
 				pass
 
-			bMessage = message.encode()
+			b_message = s_message.encode()
 
-			length = len(bMessage)
+			i_length = len(b_message)
 
-			CLIENT.sendall(struct.pack('>I', length))
-			CLIENT.sendall(bMessage)
+			CLIENT.sendall(struct.pack('>I', i_length))
+			CLIENT.sendall(b_message)
         
 		except Exception as er:
 			raise er
 
-	def Receive_Thread(self):
+	def receive_thread(self):
 
-		while(self.runningStatus):
-			self.ReceiveMethod()
+		while(self.b_running_status):
+			self.receive_method()
 			pass
 
-	def ReceiveMethod(self):
-
-		#unexpected looping is occuring
+	def receive_method(self):
 
 		try:
 
-			# Read message length and unpack it into an integer
-			bMessageLength = self.receiveAll(4)
-			if bMessageLength is None:
-				#print(bMessageLength)
+			b_length = self.receive_all(4)
+			if b_Length is None:
 				return
 
-			print(str(bMessageLength))
+			print(str(b_length))
 
-			intLength = int.from_bytes(bMessageLength, byteorder= 'big')
+			i_length = int.from_bytes(b_length, byteorder= 'big')
 
-			print(str(intLength))
+			print(str(i_length))
 			    
-			serverMessage = self.receiveAll(intLength).decode()
+			s_message = self.receive_all(i_length).decode()
 
-			print(str(serverMessage))
-			# Read the message data
+			print(str(server_message))
+			# Read the message b_data
 			
-			self.controller.Reply_Handler(serverMessage)
+			self.controller.Reply_Handler(server_message)
 
 			print("Finished Getting First Message")
-			bNo = self.CLIENT.recv(1056)
-			print(bNo)
+			b_no = self.CLIENT.recv(1056)
+			print(b_no)
 
 		except Exception as e:
 			raise e
     
+	def receive_all(self, length):
 
-	'''Helper function to recv a number of bytes or return None if EOF is hit'''
-	def receiveAll(self, length):
-
-
+		'''Helper function to recv a number of bytes or return None if EOF is hit'''
 		#byte sequence
-		data = b''
+		b_data = b''
 
-		#Keep recieving message until end of data length
+		#Keep recieving message until end of b_data length
 		while (length):
+			#recieve b_data
+			s_packet = self.CLIENT.recv(length)
 
-			#recieve data
-			packet = self.CLIENT.recv(length)
+			if not s_packet: 
+				return None
 
-			if not packet: return None
-			data += packet
-
-			length -= len(packet)
-
-		return data
+			b_data += s_packet
+			length -= len(s_packet)
+		return b_data
 
 	def close(self):
-		self.runningStatus = False # set flag to force threads to end
+		self.b_running_status = False # set flag to force threads to end
 
 		for thread in self.THREADS:
 			thread.join()
