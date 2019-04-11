@@ -104,11 +104,11 @@ class ClientReciever():
 			pass
 
 	def receive_method(self):
-
 		try:
 
 			b_length = self.receive_all(4)
-			if b_Length is None:
+			
+			if b_length is None:
 				return
 
 			print(str(b_length))

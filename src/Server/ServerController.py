@@ -73,7 +73,7 @@ class ServerController():
     def login_handler(self, username, password):
 
         if(not self.in_list(username, password, "1")):
-            print("not in admin user list")
+            logger.info("user not in admin user list")
             self.window.login_warning()
         else: 
             self.window.show_frame("ServerView")
@@ -109,11 +109,9 @@ class ServerController():
         while not self.model.THREADS_JOIN:
             try:
 
-                print("Attempting to connect")
-                # block until a connection arrives (timeout 1 second)
                 connectionSocket, addr = self.model.SERVER.accept() 
 
-                print("Connected!")
+                print("Connected to new user.")
 
                 reciever = ServerReciever(connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self)
                 self.model.USER_RECIEVERS.append(reciever)
@@ -130,7 +128,7 @@ class ServerController():
                 #self.model.THREADS.append(recieveThread)
                 
             except timeout:
-                pass # not a problem, just loop back
+                pass
             except Exception as er:
                 raise er
 

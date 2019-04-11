@@ -15,18 +15,6 @@ class ServerModel:
 	# [1]: passhash
 	# [2]: admin
 
-	USER_CONNECTIONS = [] #For listing number of user connections
-	# Each new connection is appended to the list in the following format (sublist, e.g. CONNECTIONS[0][1] == addr):
-	# [0]: connection socket of the client, used to send/receive
-	# [1]: address of client, not yet used, but stored if needed
-	# [2]: status of connection. Statuses so far:
-	#     "NEW": newly connected, accepted and stored, not yet authenticated
-	#     "AUTH": started authentication, not yet logged in
-	#     "VERIFIED": completed authentication, ready to start communication
-	#     "ONLINE": communication set up and actively sending/recieving messages
-	#     "DISCONNECTED": connection has been terminated, awaiting cleanup
-	# [3]: username of validated login.  Defaults to "Guest" prior to authentication
-
 	USER_RECIEVERS = [] #For lisiting number of user connections
 	# Each new connection is given a reciever and each reciever is appended to this list
 
@@ -74,8 +62,8 @@ class ServerModel:
 		self.load_queue(self.MESSAGE_PATH, self.CLIENT_MESSAGE_QUEUE)
 
     #Check User CSV: returns list of CSV file contents
-	def load_user_list(self):
-		file = open(self.USER_PATH, "r") # open the authentication file for reading
+	def load_user_list(cls):
+		file = open(cls.USER_PATH, "r") # open the authentication file for reading
 		text = file.read().splitlines() # read in all lines of the file
 		file.close() # close the file
 
@@ -83,10 +71,10 @@ class ServerModel:
 			user_values = line.split(",") # parse out the username and password hash
 			#UserValues.append(0) # number of failed login attempts
 			#UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
-			self.AUTHENTIC_USERS.append(user_values) # store the object for later authentication
+			cls.AUTHENTIC_USERS.append(user_values) # store the object for later authentication
      
 	#returns message list for user        
-	def load_queue(self, filepath, list_queue):
+	def load_queue(cls, filepath, list_queue):
 
 		'''Load stored unsent messages from messages.csv '''
 
@@ -101,10 +89,10 @@ class ServerModel:
 			list_queue.put(message_values) # store the object for later authentication
 
 	#Write CSV: writes user dictionary to users.CSV file and writes over previous information		
-	def save_user_list(self, Name, Pass):
+	def save_user_list(cls, Name, Pass):
 
 		'''Save known users to CSV file at util/users.csv'''
 
-		file = open(self.USER_PATH, "a") # open authentication file to permanently save account
+		file = open(cls.USER_PATH, "a") # open authentication file to permanently save account
 		file.write(Name + "," + Pass + "\n") # write the data to file
 		file.close()

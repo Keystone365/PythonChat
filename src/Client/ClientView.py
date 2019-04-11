@@ -5,13 +5,11 @@ from tkinter import font  as tkfont
 
 '''
 NOTES: 
-The View is the module whose task is to display 
+The ClientWindow view is the module whose task is to display 
 data to the user. Might call on model to display data.
-The view should never call it's own methods. The view can be 
+The view should try not to call it's own methods. A view can be 
 any type of output representation, be it HTML, GUI,
 or text.
-
-
 '''
 
 class ClientWindow(tk.Tk):
@@ -39,14 +37,13 @@ class ClientWindow(tk.Tk):
 
 		self.frames = {}
 		for F in frame_touple: #login
-			page_name = F.__name__
-			print(str(page_name))
-			frame = F(container, self.CONTROLLER)
-			self.frames[page_name] = frame
 
 			# put all of the pages in the same location;
 			# the one on the top of the stacking order
 			# will be the one that is visible.
+			page_name = F.__name__
+			frame = F(container, self.CONTROLLER)
+			self.frames[page_name] = frame
 			frame.grid(row=0, column=0, sticky="nsew", **kwargs)
 
 		self.show_frame("Login")

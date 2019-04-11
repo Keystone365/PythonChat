@@ -57,7 +57,7 @@ class ClientController():
     def send_handler(self, message):
         frame = self.c_window.current_frame()
         s_message = "\n" + self.clientmodel.username + ":" + message
-        frame.update_messages(s_message)
+        frame.update_txt_Messages(s_message)
         pass
 
     #Return key press handler
