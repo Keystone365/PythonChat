@@ -50,15 +50,21 @@ class ClientController():
         pass
 
     def reply_handler(self, reply):
-        frame = self.c_window.current_frame()
-        frame.update_messages("\n" + reply)
+        self.c_window.update_txt_messages(reply)
         pass
 
-    def send_handler(self, message):
-        frame = self.c_window.current_frame()
-        s_message = "\n" + self.clientmodel.username + ":" + message
-        frame.update_txt_Messages(s_message)
+    def send_handler(self, s_message):
+
+        #TODO: Add code to speak to server here
+
+        self.update_txt(s_message)
         pass
+
+    def clear_ent_window(self):
+        self.c_window.clr_ent_field()
+
+    def update_txt(self, s_message):
+        self.c_window.update_txt_messages(s_message)
 
     #Return key press handler
     def return_key_handler(self, event):
@@ -68,11 +74,10 @@ class ClientController():
 
     def printmessage(self):
         self.reply_handler('PythonChat 2019 Client running')
-        self.reply_handler('Host IP: ' + self.clientmodel.clientIP)    
-        self.reply_handler('Server IP: ' + self.clientmodel.serverIP)  
-        self.reply_handler('Listening on port: ' + str(self.clientmodel.clientPort))
+        self.reply_handler('Host IP: ' + self.clientmodel.client_ip)    
+        self.reply_handler('Server IP: ' + self.clientmodel.server_ip)  
+        self.reply_handler('Listening on port: ' + str(self.clientmodel.client_port))
         self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        self.reply_handler("Establishing connection....")
 
     def get_server_port(self):
         return self.clientmodel.server_port

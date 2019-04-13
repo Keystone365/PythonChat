@@ -28,7 +28,7 @@ class ServerController():
 
     def __init__(self):
         logger.info('Initializing controller')
-        self.window = ServerWindow(self)
+        self.s_window = ServerWindow(self)
         self.model = ServerModel()
 
     def run(self):
@@ -37,13 +37,13 @@ class ServerController():
         print('Listening on port: ' + str(self.model.PORT))
         print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
         self.model.load_info()
-        self.window.run()
+        self.s_window.run()
 
     def close(self):
 
         if (not self.model.b_close):
             logger.info("Closing ServerController")
-            self.window.close_windows()
+            self.s_window.close_windows()
             self.model.b_close = True
             self.model.THREADS_JOIN = True
 
@@ -64,9 +64,6 @@ class ServerController():
             print('\nPythonChat Server cleanup and exit...done!')
             self.model.SERVER.close()
 
-    def handler():
-        pass
-
     def return_key_handler(self, event):
         pass
 
@@ -74,9 +71,10 @@ class ServerController():
 
         if(not self.in_list(username, password, "1")):
             logger.info("user not in admin user list")
-            self.window.login_warning()
+            self.s_window.login_warning()
         else: 
-            self.window.show_frame("ServerView")
+            self.model.SERVER.listen(5)
+            self.s_window.show_frame("ServerView")
 
             logger.info("Entering Accept Thread")
 
@@ -115,17 +113,6 @@ class ServerController():
 
                 reciever = ServerReciever(connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self)
                 self.model.USER_RECIEVERS.append(reciever)
-                #TODO: Need to add loop to close section to remove recievers
-                
-                # store the connection to the list
-                #self.model.USER_CONNECTIONS.append([connectionSocket, addr, "NEW", "Guest"]) 
-                #self.model.CLIENT_MESSAGE_QUEUE.put("New chat member from " + addr[0] + ":" + str(addr[1]))
-
-
-                #recieveThread = threading.Thread(target = self.recieveMessages, args = (connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self))
-                #recieveThread.daemon = True
-                #recieveThread.start()
-                #self.model.THREADS.append(recieveThread)
                 
             except timeout:
                 pass

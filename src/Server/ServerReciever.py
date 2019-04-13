@@ -60,7 +60,6 @@ class ServerReciever():
 			raise er
 
 	def receive_thread(self):
-
 		try:
 			while(self.running_status):
 

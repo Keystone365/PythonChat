@@ -8,10 +8,7 @@ from socket import *
 class ClientReciever():
 
 	THREADS = []
-	
-	#client socket setup
 	CLIENT = socket(AF_INET, SOCK_STREAM)
-	#CLIENT.settimeout(10) #set time out value
 
 	i_RECIEVE_BUFFER_SIZE = 1024
 	i_SEND_BUFFER_SIZE = 1024
@@ -36,7 +33,6 @@ class ClientReciever():
 			try:
 				print('Atempting to Connect...')
 				self.CLIENT.connect(self.ADDR)
-				#self.CLIENT.setblocking(0)
 				self.b_client_connect = True
 
 			except ConnectionRefusedError:

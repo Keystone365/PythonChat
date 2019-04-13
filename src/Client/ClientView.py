@@ -53,6 +53,9 @@ class ClientWindow(tk.Tk):
 		self.deiconify()
 		self.mainloop()
 
+	def update_txt_messages(self, reply):
+		self.current_frame.update_txt_messages("\n" + reply)
+
 	def close_windows(self):
 		try:
 			self.destroy()
@@ -85,7 +88,7 @@ class ClientView(tk.Frame):
 		self.btn_send = tk.Button(self, text= "Send", width = 20, command = self.reply_message)
 		#Entries
 		self.ent_reply = tk.Entry(self, width = 40)
-		self.ent_reply.bind("<Return>", (lambda event: self.Reply_Message))
+		self.ent_reply.bind("<Return>", (lambda event: self.reply_message))
 		#Label
 		self.lbl_Reply = tk.Label(self, text="Reply")
 		#Text Field
@@ -99,7 +102,7 @@ class ClientView(tk.Frame):
 		self.btn_send.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.btn_quit.pack(side="right", padx=15)
 
-	def update_txt_Messages(self, s_message):
+	def update_txt_messages(self, s_message):
 		self.txt_messages.config(state="normal")
 		self.txt_messages.insert(tk.END, s_message)
 		self.txt_messages.config(state="disabled")

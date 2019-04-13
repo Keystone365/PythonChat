@@ -51,7 +51,6 @@ class ServerModel:
 	SERVER = socket(AF_INET, SOCK_STREAM)
 	SERVER.bind(ADDR)
 	SERVER.settimeout(3) #set time out value
-	SERVER.listen(5)
 	b_close = False
 
 	def __init__(self):
