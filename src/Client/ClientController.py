@@ -25,13 +25,12 @@ logger = logging.getLogger() #root logger
 
 class ClientController():
 
-    OUT_MESSAGE_QUEUE = queue.Queue()
-    clientmodel = ClientModel()
+    model = ClientModel()
     b_close = False
 
     def __init__(self, *args, **kwargs):
         self.c_window = ClientWindow(self)
-        self.reciever = ClientReciever(self, self.OUT_MESSAGE_QUEUE)
+        self.reciever = ClientReciever(self)
 
     def run(self):
         self.c_window.run()
@@ -41,11 +40,15 @@ class ClientController():
         b_start = self.reciever.start(server, port)
 
         if(b_start):
-            #set clientmodel info
-            self.clientmodel.set_login(server, port, username)
+
+            self.reciever.message(username + ": Connected!")
+            #set model info
+            self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
             self.printmessage()
+            logger.info("Login succesful")
         else:
+            logger.info("Login failed.")
             self.c_window.error_box("Connection Error", "Connection failed. Please try again.")
         pass
 
@@ -59,6 +62,10 @@ class ClientController():
 
         self.update_txt(s_message)
         pass
+
+    def error_handler(self, title, s_message):
+        self.c_window.error_box(title, s_message)
+        self.close()
 
     def clear_ent_window(self):
         self.c_window.clr_ent_field()
@@ -74,21 +81,25 @@ class ClientController():
 
     def printmessage(self):
         self.reply_handler('PythonChat 2019 Client running')
-        self.reply_handler('Host IP: ' + self.clientmodel.client_ip)    
-        self.reply_handler('Server IP: ' + self.clientmodel.server_ip)  
-        self.reply_handler('Listening on port: ' + str(self.clientmodel.client_port))
+        self.reply_handler('Host IP: ' + self.model.client_ip)    
+        self.reply_handler('Server IP: ' + self.model.server_ip)  
+        self.reply_handler('Listening on port: ' + str(self.model.client_port))
         self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def get_server_port(self):
-        return self.clientmodel.server_port
+        return self.model.server_port
 
     def get_server_ip(self):
-        return self.clientmodel.server_ip
+        return self.model.server_ip
 
     def close(self):
-        if (not self.b_close):
+        if (not self.model.b_close):
             logger.info("Closing Client ClientController")
+            self.model.THREADS_JOIN = True
+            logger.info("Closing Reciever")
             self.reciever.close()
+            logger.info("Reciever closed")
             self.c_window.close_windows()
-            self.b_close = True
+            logger.info("Window closed")
+            self.model.b_close = True
             print('\nPythonChat Client cleanup and exit...done!')

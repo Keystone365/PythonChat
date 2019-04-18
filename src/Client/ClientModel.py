@@ -17,26 +17,27 @@ from util.utility import *
 
 class ClientModel:
 
-	def __init__(self):
-		self.client_ip = "localhost"
-		self.server_ip = "127.0.0.1"
-		self.client_port = 8192
-		self.server_port = 5006
-		self.username = "Anonymous"
-		self.BUFSIZE = 1024
-		self.CLIENT = socket(AF_INET, SOCK_STREAM)
-		self.CLIENT.settimeout(10) #set time out value
-		self.CHAT_TAG =  True
-		self.THREADS_JOIN = False # Boolean flag for ending threads
-		self.THREADS = []
-		self.CLIENT_MESSAGE_QUEUE = queue.Queue()
-		self.USERNAME = []
+    def __init__(self):
+        self.client_ip = "localhost"
+        self.server_ip = "127.0.0.1"
+        self.client_port = 8192
+        self.server_port = 5006
+        self.username = "Anonymous"
+        self.BUFSIZE = 1024
+        self.CLIENT = socket(AF_INET, SOCK_STREAM)
+        self.CLIENT.settimeout(10) #set time out value
+        self.CHAT_TAG =  True
+        self.THREADS_JOIN = False # Boolean flag for ending threads
+        self.THREADS = []
+        self.CLIENT_MESSAGE_QUEUE = queue.Queue()
+        self.USERNAME = []
+        self.b_close = False
 
-	def set_login(self, Server, Port, Username):
-		self.server = Server
-		self.port = Port
-		self.username = Username
-		print(self.server + ", " + str(self.port) + ", " + self.username)
+    def set_login(self, server, port, username):
+        self.server = server
+        self.port = port
+        self.username = username
+        print(self.server + ", " + str(self.port) + ", " + self.username)
 
 
 ###################################################################
@@ -455,7 +456,7 @@ def messageHandler():
     
 #######################################MAIN###############################################3
     
-def Main():    
+''''def Main():    
     
     #logger.info('In Authenticate method')
     
@@ -476,7 +477,7 @@ def Main():
     read_message_thread.daemon = True
     read_message_thread.start() # start asyncronusly sending messages
     THREADS.append(read_message_thread) # catalog the thread in the master list
-    logger.info('Recieve message thread 2 running')
+    logger.info('Recieve message thread 2 running')'''
 
 
 

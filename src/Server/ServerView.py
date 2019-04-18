@@ -42,7 +42,7 @@ class ServerWindow(tk.Tk):
 		self.show_frame("Login")
 
 	def run(self):
-		self.title("Python Chat Application")
+		self.title("Python Server Application")
 		self.deiconify()
 		self.mainloop()
 
@@ -57,13 +57,16 @@ class ServerWindow(tk.Tk):
 		'''Show a frame for the given page name'''
 		frame = self.frames[page_name]
 		frame.tkraise()
-		self.currentFrame = frame
+		self.current_frame = frame
 
 	def current_frame(self):
 		return self.currentFrame
 
 	def login_warning(self):
 		messagebox.showerror("Login Warning", "Admin user not found. Incorrect username or password")
+
+	def update_txt_messages(self, reply):
+		self.current_frame.update_txt_messages("\n" + reply)
 
 
 class ServerView(tk.Frame):
@@ -92,13 +95,13 @@ class ServerView(tk.Frame):
 		#self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.quitButton.pack(side="right", padx=15)
 
-	def update_messages(self, sMessage):
+	def update_txt_messages(self, s_message):
 		self.messages.config(state="normal")
-		self.messages.insert(tk.END, sMessage)
+		self.messages.insert(tk.END, s_message)
 		self.messages.config(state="disabled")
 
 	def reply_message(self):
-		self.controller.Send_Handler(self.ent_reply.get())
+		self.controller.send_handler(self.ent_reply.get())
 		self.ent_reply.delete(0, "end")
 
 
@@ -146,3 +149,6 @@ class Login(tk.Frame):
 		username = self.ent_username.get()
 		password = self.ent_password.get()
 		self.controller.login_handler(username, password)
+
+	def update_txt_messages(self, message):
+		print("What happened?")

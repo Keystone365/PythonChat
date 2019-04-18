@@ -3,12 +3,15 @@ import queue
 import time
 #from ClientController import ClientController
 import threading
+import struct
 from socket import *
 
 class ClientReciever():
 
 	THREADS = []
 	CLIENT = socket(AF_INET, SOCK_STREAM)
+
+	OUT_MESSAGE_QUEUE = queue.Queue()
 
 	i_RECIEVE_BUFFER_SIZE = 1024
 	i_SEND_BUFFER_SIZE = 1024
@@ -17,9 +20,8 @@ class ClientReciever():
 	b_client_connect = False
 	i_CONNECT_DELAY=6 
 
-	def __init__(self, Controller, out_queue):
-		self.controller = Controller
-		self.OUT_MESSAGE_QUEUE = out_queue
+	def __init__(self, controller):
+		self.controller = controller
 
 	def start(self, server, port):
 		self.HOST = server
@@ -34,6 +36,7 @@ class ClientReciever():
 				print('Atempting to Connect...')
 				self.CLIENT.connect(self.ADDR)
 				self.b_client_connect = True
+				print('Connected To Server')
 
 			except ConnectionRefusedError:
 				pass
@@ -47,13 +50,15 @@ class ClientReciever():
 		else:
 			print('Connected to server.')
 
-			#print("Loaded previous users")
-			'''sendingThread = threading.Thread(target = send_thread, args = ()) # generate a thread to accept connections
-			sendingThread.daemon = True
-			sendingThread.start() # start accepting connections
-			THREADS.append(sendMessageThread) # catalog the thread in the master list
+			self.OUT_MESSAGE_QUEUE.put("User has Connected!")
 
-			'''#print("Accepting new connections")
+			#print("Loaded previous users")
+			sending_thread = threading.Thread(target = self.send_thread, args = ()) # generate a thread to accept connections
+			sending_thread.daemon = True
+			sending_thread.start() # start accepting connections
+			self.THREADS.append(sending_thread) # catalog the thread in the master list
+
+			#print("Accepting new connections")
 			receiving_thread = threading.Thread(target = self.receive_thread, args = ()) # generate a thread to send all messages
 			receiving_thread.daemon = True
 			receiving_thread.start() # start asyncronusly sending messages
@@ -61,12 +66,18 @@ class ClientReciever():
 
 			return self.b_client_connect
 
+	def message(self, string):
+		print("Message Sending")
+		self.OUT_MESSAGE_QUEUE.put(string)
+		print("In Queue")
+		pass
+
 	def send_thread(self):
 
 		while(self.b_running_status):
 			self.send_method()
 
-	def SendMethod(self):
+	def send_method(self):
 
 		'''
 		Sends message according to little endian 
@@ -83,12 +94,16 @@ class ClientReciever():
 			if s_message is None:
 				pass
 
+			print("Message taken from queue.")
+
 			b_message = s_message.encode()
 
 			i_length = len(b_message)
 
-			CLIENT.sendall(struct.pack('>I', i_length))
-			CLIENT.sendall(b_message)
+			self.CLIENT.sendall(struct.pack('>I', i_length))
+			self.CLIENT.sendall(b_message)
+
+			print("Message Sent!")
         
 		except Exception as er:
 			raise er
@@ -124,18 +139,23 @@ class ClientReciever():
 			b_no = self.CLIENT.recv(1056)
 			print(b_no)
 
+		except ConnectionResetError as conError:
+			self.controller.error_handler("Connection Error",
+				"Server has disconnected. Program will now close, please try again at another time.")
+
 		except Exception as e:
+			print("Exception in Recieve Method")
 			raise e
+
     
 	def receive_all(self, length):
 
 		'''Helper function to recv a number of bytes or return None if EOF is hit'''
+
 		#byte sequence
 		b_data = b''
 
-		#Keep recieving message until end of b_data length
 		while (length):
-			#recieve b_data
 			s_packet = self.CLIENT.recv(length)
 
 			if not s_packet: 
@@ -146,9 +166,9 @@ class ClientReciever():
 		return b_data
 
 	def close(self):
-		self.b_running_status = False # set flag to force threads to end
 
-		for thread in self.THREADS:
-			thread.join()
-			self.THREADS.remove(thread)
+		'''Function for closing reciever'''
+
+		if(self.b_running_status):
+			self.b_running_status = False
 			

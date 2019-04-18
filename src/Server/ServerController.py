@@ -84,11 +84,8 @@ class ServerController():
             manage_thread.start() 
             self.model.THREADS.append(manage_thread)
 
-            '''#Start Accept Thread
-            acceptThread = threading.Thread(target = self.acceptConnections, args = ()) 
-            acceptThread.daemon = True
-            acceptThread.start() 
-            self.model.THREADS.append(acceptThread)'''
+    def reply_handler(self, s_message):
+        self.s_window.update_txt_messages(s_message)
 
     def in_list(self, username, passhash, admin):
 
@@ -112,6 +109,7 @@ class ServerController():
                 print("Connected to new user.")
 
                 reciever = ServerReciever(connectionSocket, self.model.SERVER_MESSAGE_QUEUE, self)
+                reciever.start()
                 self.model.USER_RECIEVERS.append(reciever)
                 
             except timeout:
@@ -138,36 +136,6 @@ class ServerController():
 
         client.sendall(struct.pack('>I', length))
         client.sendall(b_message)
- 
-    def recv_message(client):
-
-        # Read message length and unpack it into an integer
-        b_messageLength = recieve_all(client, 4)
-        
-        i_Length = int.from_bytes(bMessageLength, byteorder= 'big')
-            
-        server_message = recieve_all(client, intLength).decode()
-        # Read the message data
-        return server_message        
-
-    def recieve_all(client, length):
-
-        '''Helper function to recv a number of bytes or return None if EOF is hit'''
-
-        #byte sequence
-        data = b''
-        
-        #keep recieving data and adding to message until entire message is recieved
-        while (length):
-        
-            #recieve data
-            packet = client.recv(length)
-            
-            if not packet: return None
-            data += packet
-            
-            length -= len(packet)
-        return data
 
 
     ###############################MESSAGING FUNCTIONS############################################
@@ -549,128 +517,6 @@ class ServerController():
     #################################MAIN##############################################         
 
 
-
-
-
-
-
-
-
-
 '''*******************************************************************************************************************************
     EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF    EOF
 *******************************************************************************************************************************'''
-
-
-
-'''
-        #get list of Authentic user names and old messages
-        LoadInfo()
-
-        # generate a thread to accept connections
-
-
-        # generate thread to asyncronusly send messages
-        outgoingMessagesThread = threading.Thread(target = ClientMessageHandler, args = ()) 
-        outgoingMessagesThread.daemon = True
-        outgoingMessagesThread.start() 
-        THREADS.append(outgoingMessagesThread)
-
-        # generate a thread to list all users on a timer
-        printUserListThread = threading.Thread(target = printUserList, args = ()) 
-        printUserListThread.daemon = True
-        printUserListThread.start()
-        THREADS.append(printUserListThread)
-
-
-        print('The server is ready to receive')
-
-        #loop to handle user connections
-        while True:
-            for client in USER_CONNECTIONS:
-            
-                # if we have any new client connections
-                if client[2] == "NEW": 
-                    client[2] = "AUTH"
-
-                    # asyncronusly handle authentication
-                    # catalog the thread in the master list
-                    authenticateThread = threading.Thread(target = Authenticate, args = (client,))
-                    authenticateThread.start() 
-                    THREADS.append(authenticateThread); 
-                
-                # newly verified connection, start thread for recieving messages
-                elif client[2] == "VERIFIED": 
-                    client[2] = "ONLINE"
-                    
-                    
-                    # asyncronusly handle messages from client
-                    # catalog the thread in the master list
-                    incomingMessagesThread = threading.Thread(target = receiveMessages, args = (client,))
-                    incomingMessagesThread.start() 
-                    THREADS.append(incomingMessagesThread); 
-                
-                # if the client has been disconnected and needs to be cleaned up
-                elif client[2] == "DISCONNECTED": 
-                    if not client[3] == "Guest":
-                       CLIENT_MESSAGE_QUEUE.put(["SYSTEM", "BROADCAST", client[3] + " disconnected", True])
-                    USER_CONNECTIONS.remove(client)
-            
-            
-            # thread cleanup for dead threads
-            for thread in THREADS: 
-                if not thread.isAlive(): 
-                    thread.join()
-                    THREADS.remove(thread)
-
-            #print server message queue
-            while SERVER_MESSAGE_QUEUE.qsize():
-                text = SERVER_MESSAGE_QUEUE.get()
-                print(text) # print the message
-                SERVER_MESSAGE_QUEUE.task_done() '''
-
-"""
-def recvMessage(client):
-
-    print('In recvMessage')
-    
-    # Read message length and unpack it into an integer
-    MessageLength = recieveAll(con, 4)
-    
-    print('Retrieved length')
-    
-    print (MessageLength)
-    
-    i = int.from_bytes(MessageLength, byteorder= 'big')
-    
-    print(i)
-        
-    x = recieveAll(con, i).decode()
-    # Read the message data
-    return x
-
-# Helper function to recv a number of bytes or return None if EOF is hit
-def recieveAll(con, length):
-    
-    print('in recieveAll')
-    
-    #byte sequence
-    data = b''
-    
-    while (length):
-    
-        #recieve data
-        packet = con.recv(length)
-        
-        print(packet)
-        
-        if not packet: return None
-        data += packet
-        
-        print(data)
-        
-        length -= len(packet)
-
-    return data
-    
-    """

@@ -22,6 +22,7 @@ if __name__ == '__main__':
 	except KeyboardInterrupt:
 		print("\nCTRL-C: Server shutting down")
 		print(" - Disconnecting all clients")
+		pass
 	except Error as er:
 		print("Error occured in client controller")
 		print (er)
