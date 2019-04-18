@@ -37,11 +37,11 @@ class ClientController():
 
     def login_handler(self, server, port, username):
 
-        b_start = self.reciever.start(server, port)
+        b_start = self.reciever.start(server, port, username)
 
         if(b_start):
 
-            self.reciever.message(username + ": Connected!")
+            self.reciever.message("Connected!")
             #set model info
             self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
@@ -57,10 +57,7 @@ class ClientController():
         pass
 
     def send_handler(self, s_message):
-
-        #TODO: Add code to speak to server here
-
-        self.update_txt(s_message)
+        self.reciever.message(s_message)
         pass
 
     def error_handler(self, title, s_message):

@@ -20,10 +20,12 @@ class ClientReciever():
 	b_client_connect = False
 	i_CONNECT_DELAY=6 
 
+	s_USERNAME = ""
+
 	def __init__(self, controller):
 		self.controller = controller
 
-	def start(self, server, port):
+	def start(self, server, port, username):
 		self.HOST = server
 		self.PORT = port
 		self.ADDR = (self.HOST, self.PORT)
@@ -48,6 +50,7 @@ class ClientReciever():
 			print('Connection with server failed. Please try again at a different time.')
 			return self.b_client_connect
 		else:
+			self.USERNAME = username
 			print('Connected to server.')
 
 			self.OUT_MESSAGE_QUEUE.put("User has Connected!")
@@ -68,7 +71,7 @@ class ClientReciever():
 
 	def message(self, string):
 		print("Message Sending")
-		self.OUT_MESSAGE_QUEUE.put(string)
+		self.OUT_MESSAGE_QUEUE.put(self.USERNAME + ": " + string)
 		print("In Queue")
 		pass
 
@@ -106,6 +109,8 @@ class ClientReciever():
 			print("Message Sent!")
         
 		except Exception as er:
+			print("Exception occured in recieve thread")
+			print (str(er))
 			raise er
 
 	def receive_thread(self):
@@ -129,15 +134,13 @@ class ClientReciever():
 			print(str(i_length))
 			    
 			s_message = self.receive_all(i_length).decode()
-
-			print(str(server_message))
-			# Read the message b_data
 			
-			self.controller.Reply_Handler(server_message)
+			self.controller.reply_handler(s_message)
+			print(s_message)
 
-			print("Finished Getting First Message")
-			b_no = self.CLIENT.recv(1056)
-			print(b_no)
+			#print("Finished Getting First Message")
+			#b_no = self.CLIENT.recv(1056)
+			#print(b_no)
 
 		except ConnectionResetError as conError:
 			self.controller.error_handler("Connection Error",

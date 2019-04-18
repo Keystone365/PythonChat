@@ -18,9 +18,6 @@ class ServerModel:
 	USER_RECIEVERS = [] #For lisiting number of user connections
 	# Each new connection is given a reciever and each reciever is appended to this list
 
-	#list of storing messages
-	SERVER_MESSAGE_QUEUE = queue.Queue()
-
 	CLIENT_MESSAGE_QUEUE = queue.Queue() # populated by receiveMessages threads, consumed by sendMessages thread
 	# each received message from clients, in the following format:
 	# [0]: sending user, may be "SYSTEM" for informative messages

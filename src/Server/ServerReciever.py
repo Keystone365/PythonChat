@@ -2,40 +2,46 @@ import queue
 import time
 #from ClientController import ClientController
 import threading
+import struct
 from socket import *
 
 class ServerReciever():
 
 	THREADS = []
+	OUT_MESSAGE_QUEUE = queue.Queue()
+
 	RECIEVE_BUFFER_SIZE = 1024
 	b_running_status = True
 	client_connect = False
 	delay=6
 
-	def __init__(self, client, out_queue, controller):
+	def __init__(self, client, controller):
 		self.CLIENT  = client
-		self.OUT_MESSAGE_QUEUE = out_queue
 		self.controller = controller
 
 	def start(self):
 
-			self.b_running_status = True
+		"""Start process for sending and recieving threads"""
 
-			"""Start process for sending and recieving threads"""
+		self.b_running_status = True
 
-			# generate a thread to send messages
-			sending_thread = threading.Thread(target = self.send_thread, args = ()) 
-			sending_thread.daemon = True
-			sending_thread.start() # start accepting connections
-			self.THREADS.append(sending_thread) # catalog the thread in the master list
-			print("Sending Thread Created")
+		# generate a thread to send messages
+		sending_thread = threading.Thread(target = self.send_thread, args = ()) 
+		sending_thread.daemon = True
+		sending_thread.start() # start accepting connections
+		self.THREADS.append(sending_thread) # catalog the thread in the master list
+		print("Sending Thread Created")
 
-			# generate a thread to recieve messages
-			receiving_thread = threading.Thread(target = self.receive_thread, args = ()) 
-			receiving_thread.daemon = True
-			receiving_thread.start() # start asyncronusly sending messages
-			self.THREADS.append(receiving_thread) # catalog the thread in the master list
-			print("Recieving Thread Created")
+		# generate a thread to recieve messages
+		receiving_thread = threading.Thread(target = self.receive_thread, args = ()) 
+		receiving_thread.daemon = True
+		receiving_thread.start() # start asyncronusly sending messages
+		self.THREADS.append(receiving_thread) # catalog the thread in the master list
+		print("Recieving Thread Created")
+
+	def message(self, string):
+		self.OUT_MESSAGE_QUEUE.put(string)
+		pass
 
 	def send_thread(self):
 
@@ -56,10 +62,13 @@ class ServerReciever():
 
 				b_message = message.encode()
 
-				length = len(bMessage)
+				length = len(b_message)
 
 				self.CLIENT.sendall(struct.pack('>I', length))
 				self.CLIENT.sendall(b_message)
+
+		except ConnectionResetError as con_error:
+			pass
 		except Exception as er:
 			raise er
 
@@ -86,14 +95,15 @@ class ServerReciever():
 
 				self.controller.reply_handler(server_message)
 
-				b_no = self.CLIENT.recv(self.RECIEVE_BUFFER_SIZE)
-				print(b_no)
+				#b_no = self.CLIENT.recv(self.RECIEVE_BUFFER_SIZE)
+				#print(b_no)
 
 		except ConnectionResetError as con_error:
 			self.controller.reply_handler("User has disconnected")
 			self.close()
-			
+
 		except Exception as e:
+			print("Exception occured in recieve thread")
 			raise e
     
 	'''Helper function to recv a number of bytes or return None if EOF is hit'''

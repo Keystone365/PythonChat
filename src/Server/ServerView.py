@@ -78,8 +78,8 @@ class ServerView(tk.Frame):
 
 		#Buttons, Lables, Entries
 		self.quitButton = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
-		#self.sendButton = tk.Button(self, text= "Send", width = 20, command = self.Reply_Message)
-		#self.ent_reply = tk.Entry(self, width = 40)
+		self.sendButton = tk.Button(self, text= "Broadcast", width = 20, command = self.reply_message)
+		self.ent_reply = tk.Entry(self, width = 40)
 		#self.ent_reply.bind("<Return>", (lambda event: self.Reply_Message))
 
 		self.lbl_Reply = tk.Label(self, text="Reply")
@@ -90,9 +90,9 @@ class ServerView(tk.Frame):
 		self.messages.pack(pady=10,padx=10)
 
 		#Pack
-		#self.lbl_Reply.pack(side="left", padx=15, pady=8)
-		#self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
-		#self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
+		self.lbl_Reply.pack(side="left", padx=15, pady=8)
+		self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
+		self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.quitButton.pack(side="right", padx=15)
 
 	def update_txt_messages(self, s_message):
