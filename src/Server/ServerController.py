@@ -75,6 +75,7 @@ class ServerController():
         else: 
             self.model.SERVER.listen(5)
             self.s_window.show_frame("ServerView")
+            self.s_window.load_txt_users(self.model.AUTHENTIC_USERS)
             self.printmessage()
 
             logger.info("Entering Accept Thread")

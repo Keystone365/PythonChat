@@ -40,24 +40,22 @@ class ClientController():
         b_start = self.reciever.start(server, port, username)
 
         if(b_start):
-
-            self.reciever.message("Connected!")
             #set model info
             self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
+            self.reciever.message(username + "," + gethostname())
             self.printmessage()
             logger.info("Login succesful")
         else:
             logger.info("Login failed.")
             self.c_window.error_box("Connection Error", "Connection failed. Please try again.")
-        pass
 
     def reply_handler(self, reply):
         self.c_window.update_txt_messages(reply)
         pass
 
     def send_handler(self, s_message):
-        self.reciever.message(s_message)
+        self.reciever.message(self.model.username + ": " + s_message)
         pass
 
     def error_handler(self, title, s_message):

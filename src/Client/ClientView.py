@@ -25,7 +25,7 @@ class ClientWindow(tk.Tk):
 		#basic font
 		self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
-		self.bind('<Return>', self.CONTROLLER.return_key_handler)
+		#self.bind('<Return>', self.CONTROLLER.return_key_handler)
 
 		# the container is where we'll stack a bunch of frames
 		# on top of each other, then the one we want visible
@@ -94,13 +94,14 @@ class ClientView(tk.Frame):
 		#Text Field
 		self.txt_messages = tk.Text(self)
 		self.txt_messages.config(state="disabled")
-		self.txt_messages.pack(pady=10,padx=10)
-
+		
 		#Pack
+		self.txt_messages.pack(pady=10,padx=10)
 		self.lbl_Reply.pack(side="left", padx=15, pady=8)
 		self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.btn_send.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.btn_quit.pack(side="right", padx=15)
+		
 
 	def update_txt_messages(self, s_message):
 		self.txt_messages.config(state="normal")

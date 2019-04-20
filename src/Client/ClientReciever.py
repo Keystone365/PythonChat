@@ -71,7 +71,7 @@ class ClientReciever():
 
 	def message(self, string):
 		print("Message Sending")
-		self.OUT_MESSAGE_QUEUE.put(self.USERNAME + ": " + string)
+		self.OUT_MESSAGE_QUEUE.put(string)
 		print("In Queue")
 		pass
 
@@ -126,8 +126,6 @@ class ClientReciever():
 			
 			if b_length is None:
 				return
-
-			print(str(b_length))
 
 			i_length = int.from_bytes(b_length, byteorder= 'big')
 

@@ -68,6 +68,12 @@ class ServerWindow(tk.Tk):
 	def update_txt_messages(self, reply):
 		self.current_frame.update_txt_messages("\n" + reply)
 
+	def update_txt_users(self, string):
+		self.current_frame.update_txt_users(string)
+
+	def load_txt_users(self, list):
+		self.current_frame.load_txt_users(list)
+
 
 class ServerView(tk.Frame):
 
@@ -76,29 +82,50 @@ class ServerView(tk.Frame):
 		self.master = master
 		self.controller = controller
 
+		#TODO: Fix return binding bug
+		#self.ent_reply.bind("<Return>", (lambda event: self.Reply_Message))
+
+		#Frame
+		self.fr_top = tk.Frame(self, background="Light Gray")
+
 		#Buttons, Lables, Entries
 		self.quitButton = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
 		self.sendButton = tk.Button(self, text= "Broadcast", width = 20, command = self.reply_message)
 		self.ent_reply = tk.Entry(self, width = 40)
-		#self.ent_reply.bind("<Return>", (lambda event: self.Reply_Message))
-
 		self.lbl_Reply = tk.Label(self, text="Reply")
 
 		#Text Field
-		self.messages = tk.Text(self)
-		self.messages.config(state="disabled")
-		self.messages.pack(pady=10,padx=10)
-
+		self.txt_messages = tk.Text(self.fr_top)
+		self.txt_messages.config(state="disabled")
+		self.txt_users = tk.Text(self.fr_top, width= 25, background= self.master["bg"])#"Light Gray")
+		self.txt_users.config(state="disabled")
+		
 		#Pack
+		self.txt_messages.pack(side="left",pady=10,padx=15)
+		self.txt_users.pack(side="right",pady=10,padx=15)
+		self.fr_top.pack(pady=10, ipadx=0)
 		self.lbl_Reply.pack(side="left", padx=15, pady=8)
 		self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.quitButton.pack(side="right", padx=15)
 
+	def load_txt_users(self, list):
+		self.txt_users.config(state="normal")
+		self.txt_users.insert(tk.END, str("Authentic users:\n"))
+		for user in list:	
+			self.txt_users.insert(tk.END, str(user[0]) + "\n")
+
+		self.txt_users.config(state="disabled")
+
 	def update_txt_messages(self, s_message):
-		self.messages.config(state="normal")
-		self.messages.insert(tk.END, s_message)
-		self.messages.config(state="disabled")
+		self.txt_messages.config(state="normal")
+		self.txt_messages.insert(tk.END, s_message)
+		self.txt_messages.config(state="disabled")
+
+	def update_txt_users(self, s_message):
+		self.txt_users.config(state="normal")
+		self.txt_users.insert(tk.END, s_message)
+		self.txt_users.config(state="disabled")
 
 	def reply_message(self):
 		self.controller.send_handler(self.ent_reply.get())
@@ -110,17 +137,10 @@ class Login(tk.Frame):
 		tk.Frame.__init__(self, master, relief=tk.SUNKEN, bd=2, borderwidth="20")
 		self.master = master
 		self.controller = controller
-		#root.resizable(False, False)
-		#self.frame = Frame(self.root)
 
-		#Entry widgets
-		#self.ent_server = tk.Entry(self)
-		#self.ent_server.insert(tk.END, self.controller.GetServerIP())
-		#self.ent_port = tk.Entry(self)
-		#self.ent_port.insert(tk.END, str(self.controller.GetServerPort()))
+		#Entries
 		self.ent_username = tk.Entry(self)
 		self.ent_username.insert(tk.END, "UserName")
-
 		self.ent_password = tk.Entry(self)
 		self.ent_password.insert(tk.END, "Password")
 
@@ -128,14 +148,11 @@ class Login(tk.Frame):
 		self.btn_login = tk.Button(self, text = 'Login', command = self.login_button)
 		self.btn_quit = tk.Button(self, text = 'Quit', command = self.controller.close)
 
-		#set
-
 		#Labels
 		self.lbl_Username = tk.Label(self, text="Username")
 		self.lbl_Password = tk.Label(self, text="Password")
 
-
-
+		#Pack
 		self.lbl_Username.pack(expand=True, fill='both')
 		self.ent_username.pack(expand=False, fill='y')
 		self.lbl_Password.pack(expand=True, fill='both')
@@ -143,12 +160,14 @@ class Login(tk.Frame):
 		self.btn_login.pack(expand=False, fill='y', pady= 30)
 		self.btn_quit.pack(expand=False, fill='y', pady= 20)
 
-		#self.frame.place(x = 20, y = 270, width=120, height=25)
-
 	def login_button(self):
 		username = self.ent_username.get()
 		password = self.ent_password.get()
 		self.controller.login_handler(username, password)
 
-	def update_txt_messages(self, message):
+	def update_txt_txt_message(self, message):
 		print("What happened?")
+
+class ToolBar(tk.Frame):
+	def __init__():
+		pass
