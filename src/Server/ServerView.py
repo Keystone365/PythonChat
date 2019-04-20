@@ -1,6 +1,6 @@
 import tkinter as tk 
 from tkinter import messagebox
-from tkinter import font  as tkfont
+from tkinter import font as tkfont
 
 
 #NOTES: The View is the module whose task is to display data to the user. Might call on model to display data
@@ -11,18 +11,14 @@ class ServerWindow(tk.Tk):
 		tk.Tk.__init__(self, *args, **kwargs)
 
 		self.CONTROLLER = controller
+		self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
 		#list of frames
 		FrameTouple = (Login, ServerView)
-
-		#basic font
-		self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-
+		
 		#self.bind('<Return>', self.CONTROLLER.Return_Key_Handler)
 
-		# the container is where we'll stack a bunch of frames
-		# on top of each other, then the one we want visible
-		# will be raised above the others
+		# main container frame for Server Window
 		container = tk.Frame(self)
 		container.pack(side="top", fill="both", expand=True)
 		container.grid_rowconfigure(0, weight=1)
@@ -33,46 +29,55 @@ class ServerWindow(tk.Tk):
 			page_name = F.__name__
 			frame = F(container, self.CONTROLLER)
 			self.frames[page_name] = frame
-
-			# put all of the pages in the same location;
-			# the one on the top of the stacking order
-			# will be the one that is visible.
 			frame.grid(row=0, column=0, sticky="nsew", **kwargs)
 
 		self.show_frame("Login")
 
 	def run(self):
+
+		"""Run method for Server side TKinter window"""
+
 		self.title("Python Server Application")
 		self.deiconify()
 		self.mainloop()
 
 	def close_windows(self):
+
+		"""Close method for Server side TKinter window"""
+
 		try:
 			self.destroy()
 		except tk.TclError as er:
-			#print("Window already closed")
 			pass
 
-	def show_frame(self, page_name):
-		'''Show a frame for the given page name'''
-		frame = self.frames[page_name]
+	def show_frame(self, s_page_name):
+
+		'''Method for showing a TKinter window frame. Requires page name string'''
+
+		frame = self.frames[s_page_name]
 		frame.tkraise()
 		self.current_frame = frame
 
 	def current_frame(self):
+
+		"""Method for returning current top TKinter window frame"""
+
 		return self.currentFrame
 
-	def login_warning(self):
-		messagebox.showerror("Login Warning", "Admin user not found. Incorrect username or password")
+	def error_box(self, title, message):
+
+		"""Method for displaying login error warning box."""
+		
+		messagebox.showerror(title, message)
 
 	def update_txt_messages(self, reply):
 		self.current_frame.update_txt_messages("\n" + reply)
 
-	def update_txt_users(self, string):
-		self.current_frame.update_txt_users(string)
+	def update_users(self, string):
+		self.current_frame.update_users(string)
 
-	def load_txt_users(self, list):
-		self.current_frame.load_txt_users(list)
+	def load_users(self, list):
+		self.current_frame.load_users(list)
 
 
 class ServerView(tk.Frame):
@@ -87,6 +92,7 @@ class ServerView(tk.Frame):
 
 		#Frame
 		self.fr_top = tk.Frame(self, background="Light Gray")
+		self.fr_users = ActiveUsersWidget(self.fr_top)
 
 		#Buttons, Lables, Entries
 		self.quitButton = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
@@ -102,30 +108,26 @@ class ServerView(tk.Frame):
 		
 		#Pack
 		self.txt_messages.pack(side="left",pady=10,padx=15)
-		self.txt_users.pack(side="right",pady=10,padx=15)
+		#self.txt_users.pack(side="right",pady=10,padx=15)
+		self.fr_users.pack(side="right",pady=10,padx=15, fill="both")
 		self.fr_top.pack(pady=10, ipadx=0)
 		self.lbl_Reply.pack(side="left", padx=15, pady=8)
 		self.ent_reply.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.sendButton.pack(side="left", padx=15, pady=8, ipadx = 50, fill="x")
 		self.quitButton.pack(side="right", padx=15)
 
-	def load_txt_users(self, list):
-		self.txt_users.config(state="normal")
-		self.txt_users.insert(tk.END, str("Authentic users:\n"))
+	def load_users(self, list):
 		for user in list:	
-			self.txt_users.insert(tk.END, str(user[0]) + "\n")
-
-		self.txt_users.config(state="disabled")
+			self.fr_users.add_new_label(user)
 
 	def update_txt_messages(self, s_message):
 		self.txt_messages.config(state="normal")
 		self.txt_messages.insert(tk.END, s_message)
 		self.txt_messages.config(state="disabled")
 
-	def update_txt_users(self, s_message):
-		self.txt_users.config(state="normal")
-		self.txt_users.insert(tk.END, s_message)
-		self.txt_users.config(state="disabled")
+	def update_users(self, s_user):
+		self.fr_users.add_new_label(s_user)
+		pass
 
 	def reply_message(self):
 		self.controller.send_handler(self.ent_reply.get())
@@ -161,13 +163,61 @@ class Login(tk.Frame):
 		self.btn_quit.pack(expand=False, fill='y', pady= 20)
 
 	def login_button(self):
+
+		"""Method for login button press"""
+
 		username = self.ent_username.get()
 		password = self.ent_password.get()
 		self.controller.login_handler(username, password)
 
-	def update_txt_txt_message(self, message):
+	def update_txt_message(self, message):
 		print("What happened?")
 
 class ToolBar(tk.Frame):
 	def __init__():
+		#TODO: Add server side toolbar widget
+		pass
+
+class ActiveUsersWidget(tk.Frame):
+
+	frames = []
+	i = 1
+	
+	def __init__(self, master):
+		tk.Frame.__init__(self, master)
+		self.master = master
+		self.fnt_title = tkfont.Font(family='Helvetica', size= 12, weight="bold")
+		self.lbl_title = tk.Label(self, text="Active Users", font=self.fnt_title, relief="groove")
+
+		self.lbl_title.pack(side="top",expand=False, fill='y')
+
+	def remove_label(self, s_name):
+
+		"""Method for removing user label from active user widget. Needs string name to remove"""
+
+		i_flag = -1
+		# Loop over the list of rames
+		for frm_user in self.frames:
+			i_flag += 1
+			if frm_user.winfo_children()[0].name == s_name:
+				frm_user.destroy()
+				self.frames = self.frames[:i_flag] + self.frames[i_flag+1:]
+				return
+
+	def add_new_label(self, s_name):
+
+		"""Method for adding user label to active user widget. requires name"""
+
+		frm_user = tk.Frame(self, relief="groove")
+		self.frames.append(frm_user)
+		 
+		lbl_name = tk.Label(frm_user, text=s_name, anchor='w')
+		lbl_name.name = s_name
+
+		btn_remove = tk.Button(frm_user, text="Remove", command=lambda: self.remove_label(name))    
+		
+		frm_user.pack(side="top")  
+		lbl_name.pack(side="top") 
+		#btn_remove.pack(side="right")
+
 		pass

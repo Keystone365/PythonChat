@@ -152,3 +152,6 @@ class Login(tk.Frame):
 		port = int(self.ent_port.get())
 		username = self.ent_username.get()
 		self.controller.login_handler(server, port, username)
+
+	def update_txt_messages(self, message):
+		print("What happened?")

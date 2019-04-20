@@ -51,7 +51,6 @@ class ClientReciever():
 			return self.b_client_connect
 		else:
 			self.USERNAME = username
-			print('Connected to server.')
 
 			self.OUT_MESSAGE_QUEUE.put("User has Connected!")
 
@@ -70,13 +69,10 @@ class ClientReciever():
 			return self.b_client_connect
 
 	def message(self, string):
-		print("Message Sending")
 		self.OUT_MESSAGE_QUEUE.put(string)
-		print("In Queue")
 		pass
 
 	def send_thread(self):
-
 		while(self.b_running_status):
 			self.send_method()
 
@@ -84,30 +80,24 @@ class ClientReciever():
 
 		'''
 		Sends message according to little endian 
-		unsigned int using format characters '<I
+		unsigned int using format characters '>I
 
 		Prefix each message with a 4-byte length (network byte order)
 		'>' means little endian, 'I' means unsigned integer
-		CLIENT.send sends entire message as series of send commands. '''
+		CLIENT.sendall sends entire message as series of send commands. '''
 
 		try:
 
 			s_message = self.OUT_MESSAGE_QUEUE.get()
-
 			if s_message is None:
 				pass
 
-			print("Message taken from queue.")
-
 			b_message = s_message.encode()
-
 			i_length = len(b_message)
 
 			self.CLIENT.sendall(struct.pack('>I', i_length))
 			self.CLIENT.sendall(b_message)
 
-			print("Message Sent!")
-        
 		except Exception as er:
 			print("Exception occured in recieve thread")
 			print (str(er))
@@ -123,22 +113,13 @@ class ClientReciever():
 		try:
 
 			b_length = self.receive_all(4)
-			
 			if b_length is None:
 				return
 
 			i_length = int.from_bytes(b_length, byteorder= 'big')
-
-			print(str(i_length))
-			    
 			s_message = self.receive_all(i_length).decode()
 			
 			self.controller.reply_handler(s_message)
-			print(s_message)
-
-			#print("Finished Getting First Message")
-			#b_no = self.CLIENT.recv(1056)
-			#print(b_no)
 
 		except ConnectionResetError as conError:
 			self.controller.error_handler("Connection Error",
@@ -158,7 +139,6 @@ class ClientReciever():
 
 		while (length):
 			s_packet = self.CLIENT.recv(length)
-
 			if not s_packet: 
 				return None
 

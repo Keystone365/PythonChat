@@ -71,14 +71,16 @@ class ServerController():
 
         if(not self.in_list(username, password, "1")):
             logger.info("user not in admin user list")
-            self.s_window.login_warning()
+            self.s_window.error_box("Login Warning", 
+                "Admin user not found. Incorrect username or password")
         else: 
             self.model.SERVER.listen(5)
             self.s_window.show_frame("ServerView")
-            self.s_window.load_txt_users(self.model.AUTHENTIC_USERS)
+            self.model.online_users.append(username)
             self.printmessage()
 
             logger.info("Entering Accept Thread")
+            self.s_window.load_users(self.model.online_users)
 
             #Start Accept Thread
             manage_thread = threading.Thread(target = self.manage_connections, args = ()) 
@@ -121,6 +123,8 @@ class ServerController():
                 reciever = ServerReciever(connectionSocket, self)
                 reciever.start()
                 self.model.USER_RECIEVERS.append(reciever)
+                self.model.online_users.append(str(addr))
+                self.s_window.update_users(str(addr))
                 
             except timeout:
                 pass
@@ -132,11 +136,7 @@ class ServerController():
         self.reply_handler('Host IP: ' + gethostname())     
         self.reply_handler('Listening on port: ' + str(self.model.PORT))
         self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            
-    def broadcast(self, message = []):
-        pass
-
-    
+        
     def private_message(self, message = []):
         pass
 

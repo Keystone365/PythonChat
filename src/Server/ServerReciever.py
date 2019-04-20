@@ -28,40 +28,38 @@ class ServerReciever():
 		# generate a thread to send messages
 		sending_thread = threading.Thread(target = self.send_thread, args = ()) 
 		sending_thread.daemon = True
-		sending_thread.start() # start accepting connections
-		self.THREADS.append(sending_thread) # catalog the thread in the master list
-		print("Sending Thread Created")
+		sending_thread.start()
+		self.THREADS.append(sending_thread)
 
 		# generate a thread to recieve messages
 		receiving_thread = threading.Thread(target = self.receive_thread, args = ()) 
 		receiving_thread.daemon = True
-		receiving_thread.start() # start asyncronusly sending messages
-		self.THREADS.append(receiving_thread) # catalog the thread in the master list
-		print("Recieving Thread Created")
+		receiving_thread.start()
+		self.THREADS.append(receiving_thread)
 
 	def message(self, string):
+
+		"""Method appends message to outgoing queue for thread"""
+		
 		self.OUT_MESSAGE_QUEUE.put(string)
 		pass
 
 	def send_thread(self):
 
-		'''Sends message according to little endian 
+		'''Send thread method. Sends message according to little endian 
 		unsigned int using format characters '<I
 
-		Prefix each message with a 4-byte length (network byte order)
-		'>' means little endian, 'I' means unsigned integer
-		CLIENT.send sends entire message as series of send'''
+		Prefix message with a 4-byte length (network byte order)
+		'>' means little endian, 'I' means unsigned integer.'''
 
 		try:
 			while(self.b_running_status):
 
 				message = self.OUT_MESSAGE_QUEUE.get()
-
 				if message is None:
 					continue
 
 				b_message = message.encode()
-
 				length = len(b_message)
 
 				self.CLIENT.sendall(struct.pack('>I', length))
@@ -73,30 +71,20 @@ class ServerReciever():
 			raise er
 
 	def receive_thread(self):
+
+		"""Thread Method for recieving message from server."""
+
 		try:
 			while(self.b_running_status):
 
 				# Read message length and unpack it into an integer
 				b_message_length = self.receive_all(4)
-
 				if b_message_length is None:
 					continue
 
-				print(str(b_message_length))
-
 				i_length = int.from_bytes(b_message_length, byteorder= 'big')
-
-				print(str(i_length))
-
 				server_message = self.receive_all(i_length).decode()
-
-				print(str(server_message))
-				# Read the message data
-
 				self.controller.reply_handler(server_message)
-
-				#b_no = self.CLIENT.recv(self.RECIEVE_BUFFER_SIZE)
-				#print(b_no)
 
 		except ConnectionResetError as con_error:
 			self.controller.reply_handler("User has disconnected")
@@ -106,28 +94,23 @@ class ServerReciever():
 			print("Exception occured in recieve thread")
 			raise e
     
-	'''Helper function to recv a number of bytes or return None if EOF is hit'''
 	def receive_all(self, length):
 
-		#byte sequence
-		data = b''
+		'''Helper function to recv a number of bytes or return None if EOF is hit'''
 
-		#Keep recieving message until end of data length
+		data = b''
 		while (length):
 
-			#recieve data
 			packet = self.CLIENT.recv(length)
-
 			if not packet: return None
 			data += packet
-
 			length -= len(packet)
 
 		return data
 
 	def close(self):
 
-		'''Function for closing reciever'''
+		'''Function for seting flag to closing reciever threads'''
 
 		if(self.b_running_status):
 			self.b_running_status = False
