@@ -43,7 +43,9 @@ class ClientController():
             #set model info
             self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
+            print("Authentication started.")
             self.auth_request()
+            print("Authentication ended.")
             self.printmessage()
             logger.info("Login succesful")
         else:
