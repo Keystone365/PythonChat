@@ -4,6 +4,6 @@ This project began as a academic assignment for Networking, Spring 2018, Princip
 
 ### Developers
 * Andrew Christianson
-(Spring 2018) Zachary Matthiesen
-(Spring 2018) Justin Wade
-(Spring 2018) Alphonce Baraz
+* (Spring 2018) Zachary Matthiesen
+* (Spring 2018) Justin Wade
+* (Spring 2018) Alphonce Baraz
