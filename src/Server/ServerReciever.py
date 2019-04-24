@@ -84,10 +84,9 @@ class ServerReciever():
 
 				i_length = int.from_bytes(b_message_length, byteorder= 'big')
 				server_message = self.receive_all(i_length).decode()
-				self.controller.reply_handler(server_message)
+				self.controller.reply_handler(self, server_message)
 
 		except ConnectionResetError as con_error:
-			self.controller.reply_handler("User has disconnected")
 			self.close()
 
 		except Exception as e:

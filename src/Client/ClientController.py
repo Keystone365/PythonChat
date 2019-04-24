@@ -43,7 +43,7 @@ class ClientController():
             #set model info
             self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
-            self.reciever.message(username + "," + gethostname())
+            self.auth_request()
             self.printmessage()
             logger.info("Login succesful")
         else:
@@ -55,8 +55,13 @@ class ClientController():
         pass
 
     def send_handler(self, s_message):
-        self.reciever.message(self.model.username + ": " + s_message)
+        self.reciever.message("m>" + self.model.username + ": " + s_message)
         pass
+
+    def auth_request(self):
+        self.reciever.message("a>" + self.model.username)
+        pass
+
 
     def error_handler(self, title, s_message):
         self.c_window.error_box(title, s_message)
@@ -65,7 +70,7 @@ class ClientController():
     def clear_ent_window(self):
         self.c_window.clr_ent_field()
 
-    def update_txt(self, s_message):
+    def update_txt_messages(self, s_message):
         self.c_window.update_txt_messages(s_message)
 
     #Return key press handler
@@ -75,11 +80,11 @@ class ClientController():
         pass
 
     def printmessage(self):
-        self.reply_handler('PythonChat 2019 Client running')
-        self.reply_handler('Host IP: ' + self.model.client_ip)    
-        self.reply_handler('Server IP: ' + self.model.server_ip)  
-        self.reply_handler('Listening on port: ' + str(self.model.client_port))
-        self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.update_txt_messages('PythonChat 2019 Client running')
+        self.update_txt_messages('Host IP: ' + self.model.client_ip)    
+        self.update_txt_messages('Server IP: ' + self.model.server_ip)  
+        self.update_txt_messages('Listening on port: ' + str(self.model.client_port))
+        self.update_txt_messages('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def get_server_port(self):
         return self.model.server_port
@@ -91,6 +96,9 @@ class ClientController():
         if (not self.model.b_close):
             logger.info("Closing Client ClientController")
             self.model.THREADS_JOIN = True
+
+            if(self.reciever.b_client_connect):
+                self.reciever.message(self.model.username + " has disconnected.")
             logger.info("Closing Reciever")
             self.reciever.close()
             logger.info("Reciever closed")

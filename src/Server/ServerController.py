@@ -88,16 +88,28 @@ class ServerController():
             manage_thread.start() 
             self.model.THREADS.append(manage_thread)
 
-    def reply_handler(self, s_message):
+    def reply_handler(self, reciever, s_message):
+
+        print(s_message)
         
+        l_message = s_message.split('>')
+
+        if(l_message[0] == 'm'):
+            self.send_handler(l_message[1])
+        if(l_message[0] == 'a'):
+            print("Authentication message")
+            self.authenticate(reciever, l_message[1])
+
         #TODO: Add code to parse for specific users
+        
+        pass
+
+    def send_handler(self, s_message):
+
         for reciever in self.model.USER_RECIEVERS:
             reciever.message(s_message)
 
         self.s_window.update_txt_messages(s_message)
-
-    def send_handler(self, s_message):
-        self.reply_handler("Server(" + self.model.HOST + "): " + s_message)
 
     def in_list(self, username, passhash, admin):
 
@@ -116,13 +128,10 @@ class ServerController():
         while not self.model.THREADS_JOIN:
             try:
 
-                connectionSocket, addr = self.model.SERVER.accept() 
+                connection_socket, addr = self.model.SERVER.accept() 
+                reciever = ServerReciever(connection_socket, self)
+                self.start_reciever(reciever)
 
-                print("Connected to new user.")
-
-                reciever = ServerReciever(connectionSocket, self)
-                reciever.start()
-                self.model.USER_RECIEVERS.append(reciever)
                 self.model.online_users.append(str(addr))
                 self.s_window.update_users(str(addr))
                 
@@ -131,11 +140,33 @@ class ServerController():
             except Exception as er:
                 raise er
 
+    def start_reciever(self, reciever):
+
+        """Starts reciever and adds to list. Requires connection socket."""
+
+        reciever.start()
+        self.model.USER_RECIEVERS.append(reciever)
+
+    def authenticate(self, reciever, info):
+
+        """Authentication method for incoming users."""
+
+        #username, password = info.split(',')
+        print (info)
+
+        for account in self.model.AUTHENTIC_USERS:
+            print(str(account[0]))
+            if (account[0] == info): #and (account[1] == password):
+                print("Username correct")
+
+    def update_txt_messages(self, string):
+        self.s_window.update_txt_messages(string)
+
     def printmessage(self):
-        self.reply_handler('PythonChat 2019 Server running')
-        self.reply_handler('Host IP: ' + gethostname())     
-        self.reply_handler('Listening on port: ' + str(self.model.PORT))
-        self.reply_handler('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.update_txt_messages('PythonChat 2019 Server running')
+        self.update_txt_messages('Host IP: ' + gethostname())     
+        self.update_txt_messages('Listening on port: ' + str(self.model.PORT))
+        self.update_txt_messages('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
     def private_message(self, message = []):
         pass
@@ -151,12 +182,6 @@ class ServerController():
         
         pass
                       
-             
-    #########################CVS LOAD AND SAVE FUNCTIONS##########################################
-
-           
-    #*************AUTHENICATE FUNCTIONS**************
-        
 
     def new_user_auth(self, client, username, passhash):
 

@@ -97,7 +97,8 @@ class ClientReciever():
 
 			self.CLIENT.sendall(struct.pack('>I', i_length))
 			self.CLIENT.sendall(b_message)
-
+		except ConnectionResetError as conError:
+			pass
 		except Exception as er:
 			print("Exception occured in recieve thread")
 			print (str(er))

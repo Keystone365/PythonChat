@@ -154,4 +154,4 @@ class Login(tk.Frame):
 		self.controller.login_handler(server, port, username)
 
 	def update_txt_messages(self, message):
-		print("What happened?")
+		print("What happened?: " + message)
