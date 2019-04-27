@@ -96,7 +96,7 @@ class ServerView(tk.Frame):
 
 		#Buttons, Lables, Entries
 		self.quitButton = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
-		self.sendButton = tk.Button(self, text= "Broadcast", width = 20, command = self.send_message)
+		self.sendButton = tk.Button(self, text= "Broadcast", width = 20, command = self.broadcast_message)
 		self.ent_reply = tk.Entry(self, width = 40)
 		self.lbl_Reply = tk.Label(self, text="Reply")
 
@@ -129,8 +129,8 @@ class ServerView(tk.Frame):
 		self.fr_users.add_new_label(s_user)
 		pass
 
-	def send_message(self):
-		self.controller.send_handler("Server: " + str(self.ent_reply.get()))
+	def broadcast_message(self):
+		self.controller.send_handler("b>" + self.controller.USERNAME + " (Server Admin): " + str(self.ent_reply.get()))
 		self.ent_reply.delete(0, "end")
 
 

@@ -85,10 +85,10 @@ class ClientView(tk.Frame):
 
 		#Buttons
 		self.btn_quit = tk.Button(self, text = 'Quit', width = 15, command = self.controller.close)
-		self.btn_send = tk.Button(self, text= "Send", width = 20, command = self.reply_message)
+		self.btn_send = tk.Button(self, text= "Send", width = 20, command = self.send_message)
 		#Entries
 		self.ent_reply = tk.Entry(self, width = 40)
-		self.ent_reply.bind("<Return>", (lambda event: self.reply_message))
+		self.ent_reply.bind("<Return>", (lambda event: self.send_message))
 		#Label
 		self.lbl_Reply = tk.Label(self, text="Reply")
 		#Text Field
@@ -108,7 +108,7 @@ class ClientView(tk.Frame):
 		self.txt_messages.insert(tk.END, s_message)
 		self.txt_messages.config(state="disabled")
 
-	def reply_message(self):
+	def send_message(self):
 		self.controller.send_handler(self.ent_reply.get())
 		self.ent_reply.delete(0, "end")
 
@@ -125,6 +125,8 @@ class Login(tk.Frame):
 		self.ent_port.insert(tk.END, str(self.controller.get_server_port()))
 		self.ent_username = tk.Entry(self)
 		self.ent_username.insert(tk.END, "Anonymous")
+		self.ent_password = tk.Entry(self)
+		self.ent_password.insert(tk.END, "Password")
 
 		#Buttons
 		self.btn_login = tk.Button(self, text = 'Login', command = self.login_button)
@@ -134,6 +136,7 @@ class Login(tk.Frame):
 		self.lbl_server = tk.Label(self, text="Server")
 		self.lbl_port = tk.Label(self, text="Port")
 		self.lbl_username = tk.Label(self, text="Username")
+		self.lbl_password = tk.Label(self, text="Password")
 
 		#Pack entry widgets, buttons, labels
 		self.lbl_server.pack(expand=True, fill='both', side="top")
@@ -142,6 +145,8 @@ class Login(tk.Frame):
 		self.ent_port.pack(expand=False, fill='y')
 		self.lbl_username.pack(expand=True, fill='both')
 		self.ent_username.pack(expand=False, fill='y')
+		self.lbl_password.pack(expand=True, fill='both')
+		self.ent_password.pack(expand=False, fill='y')
 		self.btn_login.pack(expand=False, fill='y', pady= 30)
 		self.btn_quit.pack(expand=False, fill='y', pady= 20)
 
@@ -151,7 +156,8 @@ class Login(tk.Frame):
 		server = self.ent_server.get()
 		port = int(self.ent_port.get())
 		username = self.ent_username.get()
-		self.controller.login_handler(server, port, username)
+		password = self.ent_password.get()
+		self.controller.login_handler(server, port, username, password)
 
 	def update_txt_messages(self, message):
 		print("What happened?: " + message)

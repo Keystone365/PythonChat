@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
 	print('PythonChat 2019 Client running')
 	print('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-	print("Press CTRL-C to Quit.")
+	print("Press CTRL-C to Quit.\n")
 	
 	c = ClientController()
 

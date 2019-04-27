@@ -10,7 +10,7 @@ from util.utility import *
 
 from src.Client.ClientModel import ClientModel
 from src.Client.ClientView import ClientWindow
-from src.Client.ClientReciever import ClientReciever
+from src.Client.ClientReceiver import ClientReceiver
 
 #NOTE: Controller should handle I/O logic
 
@@ -30,22 +30,22 @@ class ClientController():
 
     def __init__(self, *args, **kwargs):
         self.c_window = ClientWindow(self)
-        self.reciever = ClientReciever(self)
+        self.receiver = ClientReceiver(self)
 
     def run(self):
         self.c_window.run()
 
-    def login_handler(self, server, port, username):
+    def login_handler(self, server, port, username, password):
 
-        b_start = self.reciever.start(server, port, username)
+        b_start = self.receiver.connect(server, port)
 
         if(b_start):
             #set model info
+            self.receiver.authenticate(username, password)
+            self.receiver.start()
+
             self.model.set_login(server, port, username)
             self.c_window.show_frame("ClientView")
-            print("Authentication started.")
-            self.auth_request()
-            print("Authentication ended.")
             self.printmessage()
             logger.info("Login succesful")
         else:
@@ -57,13 +57,8 @@ class ClientController():
         pass
 
     def send_handler(self, s_message):
-        self.reciever.message("m>" + self.model.username + ": " + s_message)
+        self.receiver.message("m>" + self.model.username + ": " + s_message)
         pass
-
-    def auth_request(self):
-        self.reciever.message("a>" + self.model.username)
-        pass
-
 
     def error_handler(self, title, s_message):
         self.c_window.error_box(title, s_message)
@@ -86,7 +81,7 @@ class ClientController():
         self.update_txt_messages('Host IP: ' + self.model.client_ip)    
         self.update_txt_messages('Server IP: ' + self.model.server_ip)  
         self.update_txt_messages('Listening on port: ' + str(self.model.client_port))
-        self.update_txt_messages('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.update_txt_messages('Startup: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n')
 
     def get_server_port(self):
         return self.model.server_port
@@ -97,13 +92,10 @@ class ClientController():
     def close(self):
         if (not self.model.b_close):
             logger.info("Closing Client ClientController")
-            self.model.THREADS_JOIN = True
-
-            if(self.reciever.b_client_connect):
-                self.reciever.message(self.model.username + " has disconnected.")
-            logger.info("Closing Reciever")
-            self.reciever.close()
-            logger.info("Reciever closed")
+            self.model.THREADS_JOIN = True 
+            logger.info("Closing Receiver")
+            self.receiver.close()
+            logger.info("Receiver closed")
             self.c_window.close_windows()
             logger.info("Window closed")
             self.model.b_close = True
