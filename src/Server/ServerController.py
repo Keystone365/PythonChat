@@ -71,7 +71,7 @@ class ServerController():
 
         '''This method handles the admin login. Checks username and password.'''
 
-        if(not self.in_list(username, password, "1")):
+        if(not self.authenticate_handler(True, username, password)):
             logger.info("user not in admin user list")
             self.s_window.error_box("Login Warning", 
                 "Admin user not found. Incorrect username or password")
@@ -122,14 +122,12 @@ class ServerController():
 
         self.s_window.update_txt_messages(''.join(l_message[1:]))
 
-    def in_list(self, username, passhash, admin):
+    def authenticate_handler(self, b_admin, s_username, s_password):
 
-        for account in self.model.AUTHENTIC_USERS: #itterate through account list
-            # if username found, password correct and admin privliges
-            if (account[0] == username) and (account[1] == passhash) and (account[2] == admin):
-                return True
-        #return false if no user match
-        return False
+        '''Checks string and returns true or false value if cleared.'''
+
+        #print(self.model.AUTHENTIC_USERS)
+        return self.model.is_authentic(b_admin, s_username, s_password)
 
     def manage_connections(self):
 
@@ -140,11 +138,11 @@ class ServerController():
                 
                 receiver = ServerReceiver(self.model.SERVER, self)
                 b_connect = False
+                
                 while(not b_connect and not self.model.THREADS_JOIN):
                     b_connect = receiver.connect()
 
-                if(b_connect):
-                    receiver.authenticate()
+                if(b_connect and receiver.authenticate()):
                     receiver.start()
                     self.model.USER_RECEIVERS.append(receiver)
                     self.model.online_users.append(receiver.USERNAME)

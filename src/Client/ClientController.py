@@ -27,30 +27,41 @@ class ClientController():
 
     model = ClientModel()
     b_close = False
+    b_connect = False
 
     def __init__(self, *args, **kwargs):
         self.c_window = ClientWindow(self)
-        self.receiver = ClientReceiver(self)
+        self.receiver = ClientReceiver(self.model.CLIENT, self)
 
     def run(self):
         self.c_window.run()
 
     def login_handler(self, server, port, username, password):
 
-        b_start = self.receiver.connect(server, port)
+        b_connect = self.connect(server, port)
+        s_Error = ''
 
-        if(b_start):
-            #set model info
-            self.receiver.authenticate(username, password)
-            self.receiver.start()
-
-            self.model.set_login(server, port, username)
-            self.c_window.show_frame("ClientView")
-            self.printmessage()
-            logger.info("Login succesful")
-        else:
-            logger.info("Login failed.")
+        if(not self.b_connect):
+            logger.info("Connection failed.")
             self.c_window.error_box("Connection Error", "Connection failed. Please try again.")
+        else:
+            if(self.authenticate(username, password)):
+                #set model info
+                self.receiver.start()
+                self.model.set_login(server, port, username)
+                self.c_window.show_frame("ClientView")
+                self.printmessage()
+                logger.info("Login succesful")
+            else:
+                logger.info("Authentication failed.")
+                self.c_window.error_box("Authentication Error", "Wrong username or password. Please try again.")
+
+    def connect(self, server, port):
+        if(not self.b_connect):
+            self.b_connect = self.receiver.connect(server, port)
+
+    def authenticate(self, username, password):
+        return self.receiver.authenticate(username, password)
 
     def reply_handler(self, reply):
         self.c_window.update_txt_messages(reply)

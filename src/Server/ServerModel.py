@@ -25,7 +25,6 @@ class ServerModel:
 	# [2]: message
 	# [3]: is new? (messages for offline users will be recycled to the back of the queue, reporting to the messager should only happen the first time it cycles through)
 
-
 	STOREDMESSAGES = []
 	#[0] sender
 	#[1] reciever
@@ -54,11 +53,16 @@ class ServerModel:
 		pass
 
 	def load_info(self):
+
+		'''Loads user data info from csv files.'''
+
 		self.load_user_list()
 		self.load_queue(self.MESSAGE_PATH, self.CLIENT_MESSAGE_QUEUE)
 
-    #Check User CSV: returns list of CSV file contents
 	def load_user_list(cls):
+
+		'''Loads authentic user list from users.csv file.'''
+
 		file = open(cls.USER_PATH, "r") # open the authentication file for reading
 		text = file.read().splitlines() # read in all lines of the file
 		file.close() # close the file
@@ -68,8 +72,7 @@ class ServerModel:
 			#UserValues.append(0) # number of failed login attempts
 			#UserValues.append(time.time()) # filler to initialize the index, later used to note time of lockout
 			cls.AUTHENTIC_USERS.append(user_values) # store the object for later authentication
-     
-	#returns message list for user        
+
 	def load_queue(cls, filepath, list_queue):
 
 		'''Load stored unsent messages from messages.csv '''
@@ -92,3 +95,22 @@ class ServerModel:
 		file = open(cls.USER_PATH, "a") # open authentication file to permanently save account
 		file.write(Name + "," + Pass + "\n") # write the data to file
 		file.close()
+
+	def is_authentic(cls, b_admin, username, passhash):
+
+		'''Checks if user is authentic valid user. Returns boolean value.'''
+
+		for account in cls.AUTHENTIC_USERS: #itterate through account list
+			# if username found, password correct and admin privliges
+			if (account[0] == username) and (account[1] == passhash):
+				if(b_admin and account[2] == '1') or (not b_admin):
+					return True
+		#return false if no user match
+		return False
+
+	def remove_receiver(cls):
+
+		'''TODO: Add functionality for removing online users'''
+		for account in cls.online_users:
+			if(account[0] == username):
+				pass

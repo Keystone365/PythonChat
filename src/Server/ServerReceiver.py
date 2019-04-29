@@ -28,10 +28,19 @@ class ServerReceiver(Receiver):
 		s_message = self.receive_method()
 
 		l_message = s_message.split(',')
-		self.USERNAME = l_message[0]
-		self.PASSWORD = l_message[1]
-		self.send_method('Username: ' + self.USERNAME + ', Password: ' + self.PASSWORD)
-		self.controller.reply_handler("m>" + self.USERNAME + " has connected.")
+
+		b_correct = self.controller.authenticate_handler(False, l_message[0], l_message[1])
+
+		if(b_correct):
+			self.USERNAME = l_message[0]
+			self.PASSWORD = l_message[1]
+			self.send_method('a>Username: ' + self.USERNAME)
+			self.controller.reply_handler("m>" + self.USERNAME + " has connected.")
+			return True
+		else:
+			self.send_method('f>Incorrect User Info; Please Try Again')
+			return False
+
 		
 
 	def send_thread(self):

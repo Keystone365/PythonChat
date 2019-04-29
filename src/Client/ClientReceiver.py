@@ -3,11 +3,12 @@ from src.Receiver import *
 
 class ClientReceiver(Receiver):
 
-	CLIENT = socket(AF_INET, SOCK_STREAM)
 	s_USERNAME = ""
 
-	def __init__(self, controller):
+	def __init__(self, socket, controller):
 		self.controller = controller
+		self.CLIENT = socket
+		self.b_connect = False
 
 	def connect(self, server, port):
 		self.HOST = server
@@ -16,6 +17,8 @@ class ClientReceiver(Receiver):
 
 		#try to connect to server
 		i_close_time= time.time() + self.i_CONNECT_DELAY
+
+		print('b_connect is equal to: '+ str(self.b_connect))
 
 		while ((not self.b_connect) and (time.time() < i_close_time)):
 			try:
@@ -40,10 +43,19 @@ class ClientReceiver(Receiver):
 
 	def authenticate(self, username, password):
 
+		'''Sends username and password to server, recieves authentication confirmation. Returns boolean value.'''
+
 		self.send_method(username + ',' + password)
 		s_message = self.receive_method()
-		print(s_message)
-		pass
+		l_message = s_message.split('>')
+
+		if(l_message[0] == 'a'):
+			self.USERNAME = username
+			print('Its Good')
+			return True
+		elif(l_message[0] == 'f'):
+			print('NOT good!')
+			return False
 
 	def send_thread(self):
 		while(self.b_running_status):
