@@ -60,8 +60,19 @@ class ClientController():
         if(not self.b_connect):
             self.b_connect = self.receiver.connect(server, port)
 
-    def authenticate(self, username, password):
-        return self.receiver.authenticate(username, password)
+    def authenticate(self, receiver, username, password):
+
+        self.receiver.send_method(username + ',' + password)
+        s_message = self.receiver.receive_method()
+        l_message = s_message.split('>')
+
+        if(l_message[0] == 'a'):
+            self.USERNAME = username
+            print('Its Good')
+            return True
+        elif(l_message[0] == 'f'):
+            print('NOT good!')
+            return False
 
     def reply_handler(self, reply):
         self.c_window.update_txt_messages(reply)

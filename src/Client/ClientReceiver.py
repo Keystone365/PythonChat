@@ -45,17 +45,6 @@ class ClientReceiver(Receiver):
 
 		'''Sends username and password to server, recieves authentication confirmation. Returns boolean value.'''
 
-		self.send_method(username + ',' + password)
-		s_message = self.receive_method()
-		l_message = s_message.split('>')
-
-		if(l_message[0] == 'a'):
-			self.USERNAME = username
-			print('Its Good')
-			return True
-		elif(l_message[0] == 'f'):
-			print('NOT good!')
-			return False
 
 	def send_thread(self):
 		while(self.b_running_status):

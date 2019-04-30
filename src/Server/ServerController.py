@@ -48,18 +48,11 @@ class ServerController():
             self.model.THREADS_JOIN = True
 
             logger.info('# - Disconnecting all clients')
-            for receiver in self.model.USER_RECEIVERS: 
-                try:
-                    #self.sendMessage(client[0], "SYSTEM: Server closed")
-                    receiver.close()
-                except ConnectionResetError: # client closed program
-                    pass
+            self.close_list(self.model.USER_CONNECTIONS) 
+            self.close_list(self.model.NEW_CONNECTIONS)
                     
-            logger.info('# - Closing all Threads')        
-            for thread in self.model.THREADS:
-                logger.info('Thread Ending:' + str(thread))
-                thread.join()
-                self.model.THREADS.remove(thread)
+            logger.info('# - Closing all Threads')
+            self.close_threads()
 
             print('\nPythonChat Server cleanup and exit...done!')
             self.model.SERVER.close()
@@ -90,6 +83,13 @@ class ServerController():
             manage_thread.daemon = True
             manage_thread.start() 
             self.model.THREADS.append(manage_thread)
+
+            authentication_thread = threading.Thread(target = self.client_authentication, args = ())
+            authentication_thread.daemon = True
+            authentication_thread.start()
+            self.model.THREADS.append(authentication_thread)
+
+
 
     def reply_handler(self, s_message):
 
@@ -129,6 +129,28 @@ class ServerController():
         #print(self.model.AUTHENTIC_USERS)
         return self.model.is_authentic(b_admin, s_username, s_password)
 
+    def client_authentication(self):
+
+        for receiver in self.model.NEW_CONNECTIONS:
+            try:
+                s_message = self.receiver.receive_method()
+                l_message = s_message.split(',')
+
+                b_correct = self.authenticate_handler(False, l_message[0], l_message[1])
+
+                if(b_correct):
+                    USERNAME = l_message[0]
+                    PASSWORD = l_message[1]
+                    self.send_method('a>Username: ' + USERNAME)
+                    self.controller.reply_handler("m>" + USERNAME + " has connected.")
+                    self.model.USER_CONNECTIONS.append(receiver)
+                    self.model.NEW_CONNECTIONS.remove(receiver)
+                else:
+                    self.send_method('f>Incorrect User Info; Please Try Again')
+            except Exception as ex:
+                raise ex
+
+
     def manage_connections(self):
 
         '''Function for accepting incoming client socket connections'''
@@ -141,18 +163,7 @@ class ServerController():
                 
                 while(not b_connect and not self.model.THREADS_JOIN):
                     b_connect = receiver.connect()
-
-                if(b_connect and receiver.authenticate()):
-                    receiver.start()
-                    self.model.USER_RECEIVERS.append(receiver)
-                    self.model.online_users.append(receiver.USERNAME)
-                    self.s_window.update_users(receiver.USERNAME)
-
-    def private(self, info):
-
-        '''Private message handler method'''
-
-        pass
+                    self.model.NEW_CONNECTIONS.append(receiver)
 
     def update_txt_messages(self, string):
         self.s_window.update_txt_messages(string)
@@ -181,8 +192,29 @@ class ServerController():
 
         '''Sends string message to every online user'''
 
-        for reciever in self.model.USER_RECEIVERS:
-            reciever.message(s_message)
+        for receiver in self.model.USER_CONNECTIONS:
+            receiver.message(s_message)
+
+    def close_list(self, list):
+
+        '''Close all recievers in list of users'''
+
+        for receiver in list:
+            try:
+                #self.sendMessage(client[0], "SYSTEM: Server closed")
+                receiver.close()
+            except ConnectionResetError: # client closed program
+                pass
+
+    def close_threads(self):
+
+        '''Method closes all server threads'''
+
+        for thread in self.model.THREADS:
+            logger.info('Thread Ending:' + str(thread))
+            thread.join()
+            self.model.THREADS.remove(thread)
+
 
                     
                        

@@ -15,8 +15,11 @@ class ServerModel:
 	# [1]: passhash
 	# [2]: admin
 
-	USER_RECEIVERS = [] #For lisiting number of user connections
+	NEW_CONNECTIONS = [] #For lisiting number of new connections
 	# Each new connection is given a reciever and each reciever is appended to this list
+
+	USER_CONNECTIONS = []
+	# Each authenticated connection has a reciever and each authenticated reciever is appended to this list
 
 	CLIENT_MESSAGE_QUEUE = queue.Queue() # populated by receiveMessages threads, consumed by sendMessages thread
 	# each received message from clients, in the following format:

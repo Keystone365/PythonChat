@@ -24,25 +24,6 @@ class ServerReceiver(Receiver):
 
 		return self.b_connect
 
-	def authenticate(self):
-		s_message = self.receive_method()
-
-		l_message = s_message.split(',')
-
-		b_correct = self.controller.authenticate_handler(False, l_message[0], l_message[1])
-
-		if(b_correct):
-			self.USERNAME = l_message[0]
-			self.PASSWORD = l_message[1]
-			self.send_method('a>Username: ' + self.USERNAME)
-			self.controller.reply_handler("m>" + self.USERNAME + " has connected.")
-			return True
-		else:
-			self.send_method('f>Incorrect User Info; Please Try Again')
-			return False
-
-		
-
 	def send_thread(self):
 
 		'''Send thread method. Sends message according to little endian 
